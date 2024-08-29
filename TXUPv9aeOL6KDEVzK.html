@@ -1,0 +1,171 @@
+<html><head><base href="https://websim.dev">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cona資訊教室點名</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+    }
+    .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+        text-align: center;
+        color: #2196F3;
+        margin-top: 0;
+    }
+    .seating-chart {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .column {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .seat {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .seat:hover {
+        background-color: #e0e0e0;
+    }
+    .present {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .teacher {
+        grid-column: span 2;
+        background-color: #FFC107;
+        color: black;
+        font-weight: bold;
+    }
+    .controls {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #1976D2;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Cona資訊教室點名</h1>
+    <div class="seating-chart">
+        <div class="column">
+            <div class="seat" data-id="32">32</div>
+            <div class="seat" data-id="24">24</div>
+            <div class="seat" data-id="31">31</div>
+            <div class="seat" data-id="23">23</div>
+            <div class="seat" data-id="30">30</div>
+            <div class="seat" data-id="22">22</div>
+            <div class="seat" data-id="29">29</div>
+            <div class="seat" data-id="21">21</div>
+            <div class="seat" data-id="28">28</div>
+            <div class="seat" data-id="20">20</div>
+            <div class="seat" data-id="27">27</div>
+            <div class="seat" data-id="19">19</div>
+            <div class="seat" data-id="26">26</div>
+            <div class="seat" data-id="18">18</div>
+            <div class="seat" data-id="25">25</div>
+            <div class="seat" data-id="17">17</div>
+        </div>
+        <div class="column">
+            <div class="seat" data-id="16">16</div>
+            <div class="seat" data-id="8">8</div>
+            <div class="seat" data-id="15">15</div>
+            <div class="seat" data-id="7">7</div>
+            <div class="seat" data-id="14">14</div>
+            <div class="seat" data-id="6">6</div>
+            <div class="seat" data-id="13">13</div>
+            <div class="seat" data-id="5">5</div>
+            <div class="seat" data-id="12">12</div>
+            <div class="seat" data-id="4">4</div>
+            <div class="seat" data-id="11">11</div>
+            <div class="seat" data-id="3">3</div>
+            <div class="seat" data-id="10">10</div>
+            <div class="seat" data-id="2">2</div>
+            <div class="seat" data-id="9">9</div>
+            <div class="seat" data-id="1">1</div>
+        </div>
+    </div>
+    <div class="seat teacher">老師座位</div>
+    <div class="controls">
+        <button id="exportBtn">匯出點名記錄</button>
+        <button id="resetBtn">重置</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const seats = document.querySelectorAll('.seat:not(.teacher)');
+    const exportBtn = document.getElementById('exportBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    seats.forEach(seat => {
+        seat.addEventListener('click', () => {
+            seat.classList.toggle('present');
+        });
+    });
+
+    exportBtn.addEventListener('click', () => {
+        const absentStudents = Array.from(seats)
+            .filter(seat => !seat.classList.contains('present'))
+            .map(seat => seat.dataset.id);
+
+        const currentDate = new Date();
+        const dateString = currentDate.toISOString().split('T')[0];
+        const timeString = currentDate.toTimeString().split(' ')[0];
+        
+        let content = `點名日期：${dateString}\n`;
+        content += `點名時間：${timeString}\n\n`;
+        content += `未出席學生座號：${absentStudents.join(', ')}`;
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Cona資訊教室點名記錄_${dateString}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    resetBtn.addEventListener('click', () => {
+        seats.forEach(seat => {
+            seat.classList.remove('present');
+        });
+    });
+});
+</script>
+</body>
+</html>
