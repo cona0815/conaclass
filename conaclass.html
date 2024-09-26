@@ -1,0 +1,931 @@
+<html><head><base href="blob:https://party.websim.ai/0853cf67-d6f6-464f-8437-615500aeac46">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國小班級管理系統 - 座位圖與學生名單</title>
+<style>
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f39c12;
+    --background-color: #f0f3f7;
+    --text-color: #333;
+    --seat-color: #fff;
+    --seat-border: #ddd;
+    --empty-seat-color: #eee;
+    --tool-color: #e74c3c;
+    --tool-plus-color: #27ae60;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+}
+
+h1, h2, h3 {
+    margin: 0;
+}
+
+.nav-menu {
+    background-color: var(--secondary-color);
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-menu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-menu li {
+    margin: 5px 10px;
+}
+
+.nav-menu a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.class-selector {
+    display: flex;
+    align-items: center;
+    margin: 5px 20px;
+    flex-wrap: wrap;
+}
+
+.class-selector input,
+.class-selector select,
+.class-selector button {
+    padding: 5px 10px;
+    font-size: 14px;
+    border: 1px solid white;
+    border-radius: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.class-selector button {
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+}
+
+.progress-selector {
+    display: flex;
+    align-items: center;
+    margin: 5px 20px;
+}
+
+.progress-selector select {
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.seating-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+}
+
+.seat {
+    background-color: var(--seat-color);
+    border: 2px solid var(--seat-border);
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.3s ease, border 0.3s ease;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+}
+
+.seat.completed {
+    border: 4px solid #27ae60;
+}
+
+.seat:hover {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.empty-seat {
+    background-color: var(--empty-seat-color);
+}
+
+.student-list {
+    margin-top: 30px;
+}
+
+.student-list textarea {
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    border: 1px solid var(--seat-border);
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.save-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.save-btn:hover {
+    background-color: #e67e22;
+}
+
+.seat-tools {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.seat-tool {
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 2px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.seat-tool.absent {
+    background-color: var(--tool-color);
+}
+
+.seat-tool.not-arrived {
+    background-color: #f39c12;
+}
+
+.seat-tool.score-adjust {
+    background-color: #3498db;
+    margin: 0 2px;
+}
+
+.seat-tool.score-adjust:hover {
+    background-color: #2980b9;
+}
+
+.attendance-table {
+    margin-top: 20px;
+}
+
+#attendance-data {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#attendance-data th, #attendance-data td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#attendance-data th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#attendance-data tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.regular-grades-table {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+#grades-data {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+#grades-data th, #grades-data td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#grades-data th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#grades-data tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#add-progress-modal textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+}
+
+#progress-items-container {
+    margin-top: 10px;
+}
+
+.progress-item {
+    background-color: #f0f0f0;
+    padding: 5px;
+    margin: 5px 0;
+    cursor: move;
+}
+
+#add-progress-modal button {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+#add-progress-modal button:hover {
+    background-color: #e67e22;
+}
+
+.nav-menu input[type="file"] {
+    display: none;
+}
+
+.nav-menu label[for="import-data"] {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.progress-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-indicator input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-wrap: wrap;
+    }
+
+    .seat {
+        flex-basis: calc(50% - 5px);
+    }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>國小班級管理系統</h1>
+        <h2>座位圖與學生名單</h2>
+    </header>
+    
+    <nav class="nav-menu">
+        <ul>
+            <li><a href="#seating" onclick="showSeatingChart()">座位圖</a></li>
+            <li><a href="#attendance" onclick="generateAttendanceTable()">出缺席</a></li>
+            <li><a href="#grades" onclick="showRegularGrades()">平常成績</a></li>
+            <li><a href="#export" onclick="exportData()">資料匯出</a></li>
+            <li>
+                <label for="import-data">資料匯入</label>
+                <input type="file" id="import-data" onchange="importData(event)">
+            </li>
+        </ul>
+        <div class="class-selector">
+            <input type="text" id="class-input" placeholder="輸入班級名稱">
+            <button onclick="createClass()">建立新班級</button>
+            <select id="class-select" onchange="selectClass()">
+                <option value="">選擇班級</option>
+            </select>
+        </div>
+        <div class="progress-selector">
+            <select id="progress-select" onchange="updateCurrentProgress()">
+                <option value="">選擇進度項目</option>
+            </select>
+            <button onclick="showAddProgressModal()">新增進度項目</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="seating-chart" class="seating-chart">
+        </div>
+
+        <div id="attendance-table" class="attendance-table" style="display: none;">
+            <h3>出缺席表</h3>
+            <table id="attendance-data">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>座號</th>
+                        <th>姓名</th>
+                        <th>出席狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="regular-grades-table" class="regular-grades-table" style="display: none;">
+            <h3>平常成績表</h3>
+            <button onclick="showAddProgressModal()">新增進度項目</button>
+            <button onclick="exportGradeData()">匯出成績表</button>
+            <table id="grades-data">
+                <thead>
+                    <tr>
+                        <th>座號</th>
+                        <th>姓名</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="add-progress-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeAddProgressModal()">&times;</span>
+                <h4>新增進度項目</h4>
+                <textarea id="progress-items" placeholder="每行輸入一個進度項目"></textarea>
+                <div id="progress-items-container"></div>
+                <button onclick="addProgressItems()">新增</button>
+            </div>
+        </div>
+
+        <div class="student-list">
+            <h3>學生名單</h3>
+            <textarea id="student-list" placeholder="每行輸入一位學生的座號和姓名，以空格分隔。例如：&#10;1 王小明&#10;2 李小華&#10;4 張小美"></textarea>
+        </div>
+
+        <button class="save-btn" onclick="saveClassData()">保存班級資料</button>
+    </div>
+
+    <script>
+    let currentClass = '';
+    let classData = {};
+    let currentSeatNumber;
+    let progressItems = [];
+    let currentProgress = '';
+
+    function createClass() {
+        const className = document.getElementById('class-input').value.trim();
+        if (!className) {
+            alert('請輸入有效的班級名稱！');
+            return;
+        }
+
+        if (classData[className]) {
+            alert('此班級已存在！');
+            return;
+        }
+
+        currentClass = className;
+        classData[currentClass] = { 
+            students: new Array(32).fill(null),
+            grades: {}
+        };
+        
+        updateClassSelect();
+        loadSeatingChart();
+        document.getElementById('student-list').value = '';
+    }
+
+    function updateClassSelect() {
+        const select = document.getElementById('class-select');
+        select.innerHTML = '<option value="">選擇班級</option>';
+        for (let className in classData) {
+            const option = document.createElement('option');
+            option.value = className;
+            option.textContent = className;
+            select.appendChild(option);
+        }
+        select.value = currentClass;
+    }
+
+    function selectClass() {
+        const selectedClass = document.getElementById('class-select').value;
+        if (selectedClass) {
+            currentClass = selectedClass;
+            loadSeatingChart();
+            loadStudentList();
+            updateProgressSelect();
+            showDefaultView();
+        }
+    }
+
+    function updateProgressSelect() {
+        const select = document.getElementById('progress-select');
+        if (select) {
+            select.innerHTML = '<option value="">選擇進度項目</option>';
+            progressItems.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.name;
+                option.textContent = `${item.name} (${item.date})`;
+                select.appendChild(option);
+            });
+        }
+    }
+
+    function updateCurrentProgress() {
+        currentProgress = document.getElementById('progress-select').value;
+        if (currentProgress && currentClass) {
+            classData[currentClass].students.forEach((student, index) => {
+                if (student) {
+                    const seatNumber = index + 1;
+                    if (!classData[currentClass].grades[seatNumber]) {
+                        classData[currentClass].grades[seatNumber] = {};
+                    }
+                    if (!(currentProgress in classData[currentClass].grades[seatNumber])) {
+                        classData[currentClass].grades[seatNumber][currentProgress] = 0;
+                    }
+                }
+            });
+        }
+        loadSeatingChart();
+    }
+
+    function loadSeatingChart() {
+        const seatingChart = document.getElementById('seating-chart');
+        seatingChart.innerHTML = '';
+
+        if (!currentClass) return;
+
+        const students = classData[currentClass].students;
+
+        for (let row = 0; row < 8; row++) {
+            const rowElement = document.createElement('div');
+            rowElement.className = 'row';
+            for (let col = 0; col < 4; col++) {
+                const seatNumber = 32 - (col * 8 + row);
+                const seat = document.createElement('div');
+                seat.className = 'seat';
+                seat.setAttribute('data-id', seatNumber);
+                
+                const student = students[seatNumber - 1];
+                if (student) {
+                    const progressScore = classData[currentClass].grades[seatNumber] && 
+                                          classData[currentClass].grades[seatNumber][currentProgress] || 0;
+                    const isCompleted = progressScore >= 90;
+                    seat.classList.toggle('completed', isCompleted);
+                    seat.innerHTML = `
+                        <div>${seatNumber}</div>
+                        <div>${student}</div>
+                        <div class="seat-tools">
+                            <button class="seat-tool absent" onclick="markAbsent(${seatNumber})">缺</button>
+                            <button class="seat-tool not-arrived" onclick="markNotArrived(${seatNumber})">未到</button>
+                            <button class="seat-tool score-adjust" onclick="adjustScore(${seatNumber}, 1)">+1</button>
+                            <button class="seat-tool score-adjust" onclick="adjustScore(${seatNumber}, -1)">-1</button>
+                        </div>
+                        <div class="progress-indicator">
+                            <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="markProgressComplete(${seatNumber}, this.checked)">
+                            <span>${currentProgress || '無進度'}</span>
+                            <span>(${progressScore}分)</span>
+                        </div>
+                    `;
+                } else {
+                    seat.classList.add('empty-seat');
+                    seat.innerHTML = `
+                        <div>${seatNumber}</div>
+                        <div>空號</div>
+                    `;
+                }
+                rowElement.appendChild(seat);
+            }
+            seatingChart.appendChild(rowElement);
+        }
+    }
+
+    function updateSeatScore(seatNumber, score) {
+        const seat = document.querySelector(`.seat[data-id="${seatNumber}"]`);
+        if (seat) {
+            const progressIndicator = seat.querySelector('.progress-indicator');
+            if (progressIndicator) {
+                const scoreSpan = progressIndicator.querySelector('span:last-child');
+                scoreSpan.textContent = `(${score}分)`;
+            }
+        }
+    }
+
+    function adjustScore(seatNumber, adjustment) {
+        if (!currentClass || !currentProgress) return;
+        if (!classData[currentClass].grades) {
+            classData[currentClass].grades = {};
+        }
+        if (!classData[currentClass].grades[seatNumber]) {
+            classData[currentClass].grades[seatNumber] = {};
+        }
+        
+        const progressName = currentProgress; 
+        let currentGrade = parseInt(classData[currentClass].grades[seatNumber][progressName]) || 0;
+        currentGrade += adjustment;
+        
+        currentGrade = Math.max(0, currentGrade);
+        
+        classData[currentClass].grades[seatNumber][progressName] = currentGrade;
+        console.log(`Adjusted score for seat ${seatNumber}, progress ${progressName} by ${adjustment}. New grade: ${currentGrade}`);
+        
+        updateSeatScore(seatNumber, currentGrade);
+        
+        const seat = document.querySelector(`.seat[data-id="${seatNumber}"]`);
+        if (seat) {
+            const checkbox = seat.querySelector('.progress-indicator input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = currentGrade >= 90;
+            }
+            seat.classList.toggle('completed', currentGrade >= 90);
+        }
+    }
+
+    function markProgressComplete(seatNumber, isCompleted) {
+        if (!currentClass || !currentProgress) return;
+        if (!classData[currentClass].grades) {
+            classData[currentClass].grades = {};
+        }
+        if (!classData[currentClass].grades[seatNumber]) {
+            classData[currentClass].grades[seatNumber] = {};
+        }
+        
+        let score = classData[currentClass].grades[seatNumber][currentProgress] || 0;
+        if (isCompleted && score < 90) {
+            score = 90;
+        } else if (!isCompleted && score >= 90) {
+            score = 89;
+        }
+        
+        classData[currentClass].grades[seatNumber][currentProgress] = score;
+        updateSeatScore(seatNumber, score);
+        
+        const seat = document.querySelector(`.seat[data-id="${seatNumber}"]`);
+        if (seat) {
+            seat.classList.toggle('completed', score >= 90);
+        }
+    }
+
+    function loadStudentList() {
+        if (!currentClass) return;
+        const students = classData[currentClass].students;
+        let listContent = '';
+        students.forEach((student, index) => {
+            if (student) {
+                listContent += `${index + 1} ${student}\n`;
+            }
+        });
+        document.getElementById('student-list').value = listContent.trim();
+    }
+
+    function saveClassData() {
+        if (!currentClass) {
+            alert('請先建立或選擇一個班級！');
+            return;
+        }
+
+        const studentList = document.getElementById('student-list').value.trim().split('\n');
+        classData[currentClass].students = new Array(32).fill(null);
+
+        studentList.forEach(line => {
+            const [number, name] = line.trim().split(/\s+/);
+            const index = parseInt(number) - 1;
+            if (index >= 0 && index < 32 && name) {
+                classData[currentClass].students[index] = name;
+            }
+        });
+
+        console.log('班級資料：', classData[currentClass]);
+        alert('班級資料已保存！');
+
+        loadSeatingChart();
+    }
+
+    function markAbsent(seatNumber) {
+        const seat = document.querySelector(`.seat[data-id="${seatNumber}"]`);
+        if (seat) {
+            seat.style.backgroundColor = '#ffcccb';
+            console.log(`座位 ${seatNumber} 已標記為缺席`);
+        }
+    }
+
+    function markNotArrived(seatNumber) {
+        const seat = document.querySelector(`.seat[data-id="${seatNumber}"]`);
+        if (seat) {
+            seat.style.backgroundColor = '#ffeaa7';
+            console.log(`座位 ${seatNumber} 已標記為未到`);
+        }
+    }
+
+    function generateAttendanceTable() {
+        if (!currentClass) {
+            alert('請先選擇一個班級！');
+            return;
+        }
+
+        const attendanceTable = document.getElementById('attendance-table');
+        const tableBody = document.querySelector('#attendance-data tbody');
+        tableBody.innerHTML = '';
+
+        const currentDate = new Date().toLocaleDateString('zh-TW');
+
+        classData[currentClass].students.forEach((student, index) => {
+            if (student) {
+                const row = document.createElement('tr');
+                const seatNumber = index + 1;
+                const seat = document.querySelector(`.seat[data-id="${seatNumber}"]`);
+                let status = '出席';
+
+                if (seat.style.backgroundColor === 'rgb(255, 204, 203)') {
+                    status = '缺席';
+                } else if (seat.style.backgroundColor === 'rgb(255, 234, 167)') {
+                    status = '未到';
+                }
+
+                row.innerHTML = `
+                    <td>${currentDate}</td>
+                    <td>${seatNumber}</td>
+                    <td>${student}</td>
+                    <td>${status}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        });
+
+        document.getElementById('seating-chart').style.display = 'none';
+        document.getElementById('regular-grades-table').style.display = 'none';
+        attendanceTable.style.display = 'block';
+    }
+
+    function showDefaultView() {
+        document.getElementById('seating-chart').style.display = 'flex';
+        document.getElementById('attendance-table').style.display = 'none';
+        document.getElementById('regular-grades-table').style.display = 'none';
+    }
+
+    function showSeatingChart() {
+        showDefaultView();
+    }
+
+    function showRegularGrades() {
+        if (!currentClass) {
+            alert('請先選擇一個班級！');
+            return;
+        }
+
+        const gradesTable = document.getElementById('regular-grades-table');
+        const tableBody = document.querySelector('#grades-data tbody');
+        const tableHead = document.querySelector('#grades-data thead tr');
+        tableBody.innerHTML = '';
+        tableHead.innerHTML = '<th>座號</th><th>姓名</th>';
+
+        progressItems.forEach(item => {
+            const th = document.createElement('th');
+            th.textContent = `${item.name}\n(${item.date})`;
+            tableHead.appendChild(th);
+        });
+
+        classData[currentClass].students.forEach((student, index) => {
+            if (student) {
+                const row = document.createElement('tr');
+                const seatNumber = index + 1;
+                
+                row.innerHTML = `
+                    <td>${seatNumber}</td>
+                    <td>${student}</td>
+                `;
+
+                progressItems.forEach(item => {
+                    const grade = classData[currentClass].grades[seatNumber] && 
+                                  classData[currentClass].grades[seatNumber][item.name] || 0;
+                    const td = document.createElement('td');
+                    td.textContent = grade;
+                    row.appendChild(td);
+                });
+
+                tableBody.appendChild(row);
+            }
+        });
+
+        document.getElementById('seating-chart').style.display = 'none';
+        document.getElementById('attendance-table').style.display = 'none';
+        gradesTable.style.display = 'block';
+    }
+
+    function showAddProgressModal() {
+        document.getElementById('add-progress-modal').style.display = 'block';
+    }
+
+    function closeAddProgressModal() {
+        document.getElementById('add-progress-modal').style.display = 'none';
+    }
+
+    function addProgressItems() {
+        const items = document.getElementById('progress-items').value.split('\n').filter(item => item.trim() !== '');
+        const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+        items.forEach(item => {
+            if (!progressItems.some(pi => pi.name === item)) {
+                progressItems.push({ name: item, date: today });
+            }
+        });
+        updateProgressSelect();
+        renderProgressItems();
+        document.getElementById('progress-items').value = '';
+    }
+
+    function renderProgressItems() {
+        const container = document.getElementById('progress-items-container');
+        container.innerHTML = '';
+        progressItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'progress-item';
+            div.innerHTML = `
+                <span>${item.name}</span>
+                <input type="date" value="${item.date}" onchange="updateProgressDate('${item.name}', this.value)">
+            `;
+            container.appendChild(div);
+        });
+        
+        new Sortable(container, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function() {
+                progressItems = Array.from(container.children).map(el => ({
+                    name: el.querySelector('span').textContent,
+                    date: el.querySelector('input').value
+                }));
+                updateProgressSelect();
+            }
+        });
+    }
+
+    function updateProgressDate(itemName, newDate) {
+        const item = progressItems.find(pi => pi.name === itemName);
+        if (item) {
+            item.date = newDate;
+        }
+        updateProgressSelect();
+    }
+
+    function exportData() {
+        if (Object.keys(classData).length === 0) {
+            alert('沒有可匯出的資料！');
+            return;
+        }
+
+        const dataStr = JSON.stringify(classData);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'class_data.json';
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    function exportGradeData() {
+        if (!currentClass) {
+            alert('請先選擇一個班級！');
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+
+        // Add header row
+        let header = ["座號", "姓名"];
+        progressItems.forEach(item => {
+            header.push(`${item.name} (${item.date})`);
+        });
+        csvContent += header.join(",") + "\n";
+
+        // Add data rows
+        classData[currentClass].students.forEach((student, index) => {
+            if (student) {
+                const seatNumber = index + 1;
+                let row = [seatNumber, student];
+                progressItems.forEach(item => {
+                    const grade = classData[currentClass].grades[seatNumber] && 
+                                  classData[currentClass].grades[seatNumber][item.name] || 0;
+                    row.push(grade);
+                });
+                csvContent += row.join(",") + "\n";
+            }
+        });
+
+        // Create and trigger download
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `${currentClass}_grades.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    classData = importedData;
+                    updateClassSelect();
+                    alert('資料已成功匯入！');
+                } catch (error) {
+                    console.error('Error parsing imported data:', error);
+                    alert('匯入資料時發生錯誤。請確保檔案格式正確。');
+                }
+            };
+            reader.readAsText(file);
+        }
+    }
+
+    window.onload = function() {
+        loadSeatingChart();
+        updateProgressSelect();
+        updateClassSelect();
+        showDefaultView();
+    };
+    </script>
+</body></html>
