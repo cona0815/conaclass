@@ -66,6 +66,21 @@ class BigTwoScorekeeper {
   updateDisplay() {
     this.updateHeader();
     this.updateScoreRows();
+    // Scroll to show latest round and totals if needed
+    if (this.rounds.length > 0) {
+      setTimeout(() => {
+        const tableContainer = document.querySelector('.table-scroll');
+        const tableWidth = this.scoreTable.offsetWidth;
+        const containerWidth = tableContainer.offsetWidth;
+        const scrollAmount = Math.max(0, tableWidth - containerWidth);
+        
+        // Smooth scroll to position that shows the latest round and totals
+        tableContainer.scrollTo({
+          left: scrollAmount,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
   }
 
   updateHeader() {
@@ -95,6 +110,14 @@ class BigTwoScorekeeper {
         const input = document.createElement('input');
         input.type = 'number';
         input.className = 'score-input';
+        
+        // Add current-round class if this is the latest round and not all scores are filled
+        const isCurrentRound = roundIndex === this.rounds.length - 1;
+        const roundComplete = Object.keys(round).length === 4;
+        if (isCurrentRound && !roundComplete) {
+          input.classList.add('current-round');
+        }
+        
         input.value = round[playerIndex] || '';
         
         input.addEventListener('change', (e) => {
@@ -103,7 +126,6 @@ class BigTwoScorekeeper {
         
         cell.appendChild(input);
         
-        // Add styles based on whether this is a winning or losing score
         if (round[playerIndex] !== undefined) {
           if (this.isWinner(round, playerIndex)) {
             cell.classList.add('winning-score');
@@ -160,6 +182,13 @@ class BigTwoScorekeeper {
         // Set their score as the negative sum of other scores
         roundScores[missingPlayerIndex] = -currentFilledScores.reduce((sum, score) => sum + score, 0);
       }
+    }
+
+    // Check if round is complete (all 4 scores are filled)
+    const isRoundComplete = Object.keys(this.rounds[roundIndex]).length === 4;
+    if (isRoundComplete) {
+      // Automatically add a new round
+      this.rounds.push({});
     }
     
     this.updateDisplay();
