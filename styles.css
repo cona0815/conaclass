@@ -1,0 +1,105 @@
+body {
+  font-family: sans-serif;
+  margin: 20px;
+  background-color: #f5f5f5;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2 {
+  margin-bottom: 0.5em;
+  color: #333;
+}
+
+.btn {
+  cursor: pointer;
+  margin: 0 5px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: #45a049;
+}
+
+#resetBtn {
+  background-color: #f44336;
+}
+
+#resetBtn:hover {
+  background-color: #da190b;
+}
+
+input[type="text"], input[type="number"] {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.score-table-container {
+  margin-top: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.score-input {
+  width: 60px;
+  text-align: right;
+  padding: 4px;
+}
+
+.winning-score {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.winning-score .score-input {
+  color: #f44336;
+  font-weight: bold;
+  background-color: #fff3f3;
+}
+
+.losing-score {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.losing-score .score-input {
+  color: #4CAF50;
+  font-weight: bold;
+  background-color: #f3fff3;
+}
+
+.total-score {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
