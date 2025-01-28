@@ -1,0 +1,37 @@
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>大老二 記分</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header-container">
+    <h1>大老二 記分系統</h1>
+    <div class="player-input-section">
+      <input type="text" id="playerNameInput" placeholder="輸入玩家名稱" />
+      <button id="addPlayerBtn" class="btn">新增</button>
+      <button id="resetBtn" class="btn">重置</button>
+    </div>
+  </div>
+
+  <section class="score-table-container">
+    <div class="score-header">
+      <h2>分數表</h2>
+      <button id="addRoundBtn" class="btn">新增一局</button>
+    </div>
+    <div class="table-scroll">
+      <table id="scoreTable">
+        <thead>
+          <tr id="headerRow">
+            <th>玩家</th>
+          </tr>
+        </thead>
+        <tbody id="scoreBody">
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
