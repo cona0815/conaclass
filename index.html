@@ -1,37 +1,1563 @@
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <title>大老二 記分</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>東京無人島移居計畫 | TOKYO GETAWAY</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 恢復原本清晰的字體設定 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+JP:wght@900&family=Shippori+Mincho:wght@700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // 使用 CSS 變數來支援動態換色
+                        'tokyo-bg': 'var(--tokyo-bg)',      
+                        'tokyo-ink': 'var(--tokyo-ink)',     
+                        'tokyo-blue': 'var(--tokyo-main)',    // 主色 (原本是 pink/blue，現在統稱 main)
+                        'tokyo-gray': 'var(--tokyo-gray)',    
+                        'tokyo-gold': 'var(--tokyo-gold)',    
+                        'tokyo-accent': 'var(--tokyo-accent)',  
+                        
+                        // 功能性顏色調整為柔和版
+                        'red': { 500: '#FF8A80', 600: '#E57373' },
+                        'green': { 500: '#A5D6A7', 600: '#81C784' },
+                        'orange': { 500: '#FFCC80', 50: '#FFF3E0', 600: '#FB8C00' },
+                        'blue': { 50: '#E1F5FE', 800: '#0277BD' }
+                    },
+                    fontFamily: {
+                        // 恢復原本的字體堆疊
+                        sans: ['"Noto Sans TC"', '"Noto Sans JP"', 'sans-serif'],
+                        serif: ['"Shippori Mincho"', '"Noto Serif JP"', 'serif'],
+                        mono: ['Courier New', 'monospace'],
+                    },
+                    borderRadius: {
+                        'sm': '0.5rem',
+                        'DEFAULT': '1rem',
+                        'md': '1.5rem',
+                        'lg': '2rem',
+                        'full': '9999px',
+                    },
+                    screens: { 'print': {'raw': 'print'} }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 定義 CSS 變數 - 預設為櫻花色 (Sakura) */
+        :root {
+            --tokyo-bg: #FFFBF0;
+            --tokyo-ink: #5D4037;
+            --tokyo-main: #FF9EAA;  /* 這是主要變動的顏色 */
+            --tokyo-gray: #F3E5D8;
+            --tokyo-gold: #FFE082;
+            --tokyo-accent: #B2DFDB;
+        }
+
+        body { background-color: var(--tokyo-bg); color: var(--tokyo-ink); -webkit-font-smoothing: antialiased; background-image: radial-gradient(var(--tokyo-gray) 1px, transparent 1px); background-size: 20px 20px; transition: background-color 0.5s ease; }
+        .typo-header { line-height: 1.1; letter-spacing: 0.02em; }
+        
+        /* 卡片樣式：更圓潤、粉嫩陰影 */
+        .bright-card { 
+            background: #FFFFFF; 
+            border: 2px solid var(--tokyo-bg); 
+            box-shadow: 6px 6px 0px 0px var(--tokyo-main); /* 跟隨主色變動 */
+            border-radius: 24px;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+        
+        /* 標題數字樣式 */
+        .highlight-number { font-size: 1.5rem; line-height: 1.2; font-weight: 800; color: var(--tokyo-main); }
+        
+        @media (min-width: 768px) { .highlight-number { font-size: 2rem; } }
+        
+        @media print {
+            body { background-color: white !important; color: black !important; font-size: 10pt; }
+            #app-header, #app-container, footer, .no-print, button, #magic-notebook-btn, #flight-fab { display: none !important; }
+            #print-container { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .print-page-break { page-break-before: always; }
+        }
+        #print-container { display: none; }
+        
+        input[type="checkbox"] { 
+            accent-color: var(--tokyo-main); 
+            width: 1.2rem; 
+            height: 1.2rem; 
+            border-radius: 50%;
+        }
+        
+        #nav-container::-webkit-scrollbar { display: none; }
+        #nav-container { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .timeline-dot { 
+            position: absolute; 
+            left: -7px; 
+            top: 8px; 
+            width: 16px; 
+            height: 16px; 
+            background-color: var(--tokyo-gold); /* 奶油黃 */
+            border: 3px solid #FFFFFF; 
+            border-radius: 999px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        
+        /* Toast 風格：可可色氣泡 */
+        .toast { 
+            background-color: var(--tokyo-ink); 
+            color: #FFFFFF; 
+            padding: 12px 24px; 
+            border-radius: 30px; 
+            font-size: 14px; 
+            font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2); 
+            opacity: 0; 
+            transform: translateY(20px) scale(0.9); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: flex; 
+            items-center; 
+            gap: 10px; 
+            border-bottom: 4px solid #3E2723;
+        }
+        .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(93, 64, 55, 0.5); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        
+        /* Modal 風格：像 NookPhone App 視窗 */
+        .modal-content { 
+            background: var(--tokyo-bg); 
+            width: 100%; 
+            max-width: 800px; 
+            max-height: 85vh; 
+            border: 4px solid #FFFFFF; 
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0, 0.15); 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+        @keyframes modalPop { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        
+        .notebook-paper { 
+            background-color: #FFFFFF; 
+            background-image: linear-gradient(var(--tokyo-gray) 1px, transparent 1px); 
+            background-size: 100% 2em; 
+            font-size: 15px; 
+            line-height: 2em; 
+            color: var(--tokyo-ink); 
+            font-family: 'Courier New', monospace; 
+            border: none; 
+        }
+        
+        .tool-card { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .tool-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 8px 8px 0px 0px var(--tokyo-main); }
+        .tool-card:active { transform: translateY(-2px) scale(0.98); box-shadow: 4px 4px 0px 0px var(--tokyo-main); }
+        
+        .fab-enter { animation: fabPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes fabPop { from { transform: scale(0) rotate(-45deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+        
+        .status-light { width: 14px; height: 14px; border-radius: 50%; display: inline-block; position: absolute; top: 0; right: 0; border: 3px solid white; }
+        .status-light.green { background-color: #A5D6A7; box-shadow: 0 0 0 2px #A5D6A7; animation: pulse-slow 2s infinite; }
+        .status-light.yellow { background-color: #FFE082; box-shadow: 0 0 0 2px #FFE082; animation: pulse-normal 1.5s infinite; }
+        .status-light.red { background-color: #FF8A80; box-shadow: 0 0 0 2px #FF8A80; animation: pulse-fast 1s infinite; }
+        
+        /* 自訂按鈕樣式 - 像動森的按鈕 */
+        .nook-btn {
+            border-radius: 99px;
+            font-weight: 800;
+            transition: all 0.2s;
+            border-bottom-width: 4px;
+        }
+        .nook-btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 0px;
+            margin-top: 4px;
+        }
+        
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes pulse-normal { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; scale: 1.1; } 50% { opacity: 0.4; scale: 0.9; } }
+
+        /* 主題顏色預覽圓圈 */
+        .theme-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .theme-circle:hover { transform: scale(1.1); }
+        .theme-circle.active { ring: 2px solid #5D4037; transform: scale(1.1); box-shadow: 0 0 0 4px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body>
-  <div class="header-container">
-    <h1>大老二 記分系統</h1>
-    <div class="player-input-section">
-      <input type="text" id="playerNameInput" placeholder="輸入玩家名稱" />
-      <button id="addPlayerBtn" class="btn">新增</button>
-      <button id="resetBtn" class="btn">重置</button>
-    </div>
-  </div>
+<body class="min-h-screen flex flex-col font-sans selection:bg-tokyo-blue selection:text-white pb-20 lg:pb-0"> 
+    
+    <header id="app-header" class="bg-tokyo-blue text-white p-6 md:p-8 border-b-0 shadow-lg relative overflow-hidden rounded-b-[40px] transition-colors duration-500">
+        <!-- 裝飾用背景圓圈 -->
+        <div class="absolute top-[-20px] left-[-20px] w-32 h-32 bg-white opacity-20 rounded-full"></div>
+        <div class="absolute bottom-[-10px] right-10 w-24 h-24 bg-tokyo-gold opacity-30 rounded-full"></div>
 
-  <section class="score-table-container">
-    <div class="score-header">
-      <h2>分數表</h2>
-      <button id="addRoundBtn" class="btn">新增一局</button>
-    </div>
-    <div class="table-scroll">
-      <table id="scoreTable">
-        <thead>
-          <tr id="headerRow">
-            <th>玩家</th>
-          </tr>
-        </thead>
-        <tbody id="scoreBody">
-        </tbody>
-      </table>
-    </div>
-  </section>
+        <div class="absolute top-4 right-4 z-50 flex gap-3">
+             <button id="settings-btn" onclick="openSettingsModal()" class="nook-btn bg-white text-tokyo-ink border-tokyo-gray px-4 py-2 hover:bg-tokyo-bg shadow-sm flex items-center gap-2" title="設定">
+                <i data-lucide="settings" class="w-5 h-5 text-tokyo-blue fill-tokyo-blue transition-colors"></i>
+                <span class="hidden md:inline text-sm font-bold tracking-wider text-tokyo-ink">設定</span>
+            </button>
+        </div>
 
-  <script src="app.js" type="module"></script>
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-4 items-end relative z-10">
+            <div class="lg:col-span-8">
+                <span class="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-3 backdrop-blur-sm">Tokyo Getaway Package</span>
+                <h1 id="app-title" class="text-4xl md:text-6xl font-black tracking-tight drop-shadow-md cursor-pointer hover:opacity-80 transition-opacity" onclick="openSettingsModal()" title="點擊修改標題">TOKYO 2026</h1>
+            </div>
+            <div class="lg:col-span-4 flex flex-col items-start lg:items-end justify-between h-full pt-2 lg:pt-0">
+                <div class="mt-4 text-left lg:text-right bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20">
+                    <p class="text-lg font-bold tracking-tight text-white flex items-center gap-2"><i data-lucide="snowflake" class="w-5 h-5"></i> 旅遊指南</p>
+                    <p class="text-xs opacity-90 mt-1 font-medium text-white/80">東京・高崎・輕井澤・越後湯澤</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container" class="flex-grow max-w-6xl mx-auto w-full p-4 md:p-6 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            <aside class="lg:col-span-3 space-y-4 order-1">
+                <nav class="sticky top-6 z-30 bg-white/80 backdrop-blur-sm p-2 rounded-3xl shadow-sm border-2 border-white">
+                    <div id="nav-container" class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 pb-1 lg:pb-0"></div>
+                </nav>
+            </aside>
+            <section class="lg:col-span-9 min-h-[500px] order-2">
+                <div id="section-header" class="mb-6 pl-2"></div>
+                <div id="content-area"></div>
+            </section>
+        </div>
+    </main>
+
+    <div id="print-container"><div id="print-content-body"></div></div>
+    <div id="toast-container"></div>
+
+    <!-- Floating Action Button -->
+    <button onclick="openFlightModal()" id="flight-fab" class="fab-enter fixed bottom-24 right-6 z-40 bg-white text-tokyo-blue w-16 h-16 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all flex items-center justify-center border-4 border-tokyo-blue group" title="智慧航班管家">
+        <i data-lucide="plane" class="w-8 h-8 group-hover:rotate-12 transition-transform text-tokyo-blue transition-colors"></i>
+        <span id="flight-status-light"></span>
+    </button>
+
+    <button onclick="switchTab('toolbox')" class="fab-enter fixed bottom-6 right-6 z-40 bg-tokyo-blue text-white w-16 h-16 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all flex items-center justify-center border-4 border-white group" title="快速開啟工具箱">
+        <i data-lucide="briefcase" class="w-7 h-7"></i>
+    </button>
+
+    <!-- Flight Modal -->
+    <div id="flight-modal" class="modal-overlay" onclick="if(event.target===this) closeFlightModal()">
+        <div class="modal-content h-auto max-h-[80vh]">
+            <div class="bg-tokyo-blue text-white p-4 flex justify-between items-center shadow-sm z-10 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-full"><i data-lucide="plane" class="w-5 h-5 text-white"></i></div>
+                    <h3 class="font-bold text-lg tracking-wide">Dodo Airlines (DAL)</h3>
+                </div>
+                <button onclick="closeFlightModal()" class="bg-white/20 hover:bg-white/40 p-2 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="flight-modal-body" class="p-8 overflow-y-auto bg-tokyo-bg"></div>
+        </div>
+    </div>
+
+    <!-- Notebook Modal -->
+    <div id="notebook-modal" class="modal-overlay" onclick="if(event.target===this) closeNotebook()">
+        <div class="modal-content">
+            <div class="bg-tokyo-gold text-tokyo-ink p-4 flex justify-between items-center shadow-sm z-10 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/30 p-2 rounded-full"><i data-lucide="book-open" class="w-5 h-5 text-tokyo-ink"></i></div>
+                    <h3 class="font-bold text-lg tracking-wide">DIY Recipe & Prompt</h3>
+                </div>
+                <button onclick="closeNotebook()" class="bg-white/20 hover:bg-white/40 p-2 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-grow p-0 overflow-hidden relative">
+                <textarea id="notebook-content" class="notebook-paper w-full h-full p-8 font-mono resize-none focus:outline-none" readonly></textarea>
+                <div class="absolute bottom-6 right-6 flex gap-3">
+                    <button onclick="copyNotebookContent()" class="nook-btn bg-tokyo-blue text-white border-[#F06292] px-6 py-3 shadow-lg hover:bg-[#F06292] transition-all flex items-center gap-2 text-sm tracking-widest">
+                        <i data-lucide="copy" class="w-4 h-4"></i> Copy Recipe
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unified Settings Modal -->
+    <div id="settings-modal" class="modal-overlay" onclick="if(event.target===this) closeSettingsModal()">
+        <div class="modal-content h-auto max-h-[85vh] w-full max-w-[550px]">
+            <div class="bg-tokyo-ink text-white p-4 flex justify-between items-center shadow-sm z-10 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-full"><i data-lucide="settings" class="w-5 h-5 text-white"></i></div>
+                    <h3 class="font-bold text-lg tracking-wide">島嶼設定 (Settings)</h3>
+                </div>
+                <button onclick="closeSettingsModal()" class="bg-white/20 hover:bg-white/40 p-2 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 bg-tokyo-bg overflow-y-auto space-y-6">
+                
+                <!-- 1. Banner Title Settings -->
+                <div class="bg-white p-5 rounded-3xl border-2 border-tokyo-gray shadow-sm">
+                    <h4 class="font-black text-tokyo-ink mb-3 flex items-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4 text-tokyo-blue"></i> 網頁橫幅標題
+                    </h4>
+                    <input type="text" id="setting-banner-text" placeholder="例如: TOKYO 2026" class="w-full bg-tokyo-bg rounded-xl p-3 text-lg font-black text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue border-none" oninput="updateBannerText(this.value)">
+                    <p class="text-xs text-gray-400 mt-2 font-bold ml-1">即時預覽：修改上方標題文字</p>
+                </div>
+
+                <!-- 2. Theme Settings -->
+                <div class="bg-white p-5 rounded-3xl border-2 border-tokyo-gray shadow-sm">
+                    <h4 class="font-black text-tokyo-ink mb-4 flex items-center gap-2">
+                        <i data-lucide="palette" class="w-4 h-4 text-tokyo-blue"></i> 介面風格 (Theme)
+                    </h4>
+                    <div class="grid grid-cols-5 gap-3 justify-items-center" id="setting-theme-options">
+                        <!-- Themes rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- 3. Backup & Data -->
+                <div class="bg-white p-5 rounded-3xl border-2 border-tokyo-gray shadow-sm">
+                    <h4 class="font-black text-tokyo-ink mb-3 flex items-center gap-2">
+                        <i data-lucide="database" class="w-4 h-4 text-tokyo-blue"></i> 資料管理
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="toggleBackupView('export')" class="nook-btn bg-tokyo-bg text-tokyo-ink border-tokyo-gray py-2 text-sm flex justify-center items-center gap-2 hover:bg-white">
+                            <i data-lucide="upload" class="w-4 h-4"></i> 匯出備份
+                        </button>
+                        <button onclick="toggleBackupView('import')" class="nook-btn bg-tokyo-bg text-tokyo-ink border-tokyo-gray py-2 text-sm flex justify-center items-center gap-2 hover:bg-white">
+                            <i data-lucide="download" class="w-4 h-4"></i> 匯入還原
+                        </button>
+                    </div>
+                    
+                    <!-- Backup Content Area -->
+                    <div id="backup-content-area" class="hidden mt-4 bg-tokyo-bg p-3 rounded-xl border border-tokyo-gray relative">
+                        <p id="backup-instruction" class="text-xs text-gray-500 font-bold mb-2 ml-1"></p>
+                        <textarea id="backup-textarea" class="w-full h-24 bg-white border-none rounded-lg p-2 text-xs font-mono text-tokyo-ink resize-none focus:outline-none mb-2"></textarea>
+                        <button id="backup-action-btn" class="nook-btn w-full py-2 text-sm text-white shadow-md"></button>
+                    </div>
+                </div>
+
+                <!-- 4. Advanced/Other -->
+                <div class="bg-white p-5 rounded-3xl border-2 border-tokyo-gray shadow-sm">
+                     <h4 class="font-black text-tokyo-ink mb-3 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-tokyo-blue"></i> 進階功能
+                    </h4>
+                    <button onclick="closeSettingsModal(); openNotebook();" class="nook-btn bg-tokyo-gold text-tokyo-ink border-[#FFD54F] w-full py-3 shadow-sm hover:bg-[#FFCA28] flex justify-center items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i> 查看手帳提示詞 (Prompt)
+                    </button>
+                </div>
+                
+                <div class="text-center pt-2">
+                     <button onclick="saveSettingsAndClose()" class="nook-btn bg-tokyo-blue text-white border-tokyo-gray px-8 py-3 shadow-lg text-lg">完成 (OK)</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Setting Modal (Updated with Auto/Manual Toggle) -->
+    <div id="budget-modal" class="modal-overlay" onclick="if(event.target===this) closeBudgetModal()">
+        <div class="modal-content h-auto max-w-[400px]">
+            <div class="bg-tokyo-blue text-white p-4 flex justify-between items-center shadow-sm z-10 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-full"><i data-lucide="settings-2" class="w-5 h-5 text-white"></i></div>
+                    <h3 class="font-bold text-lg tracking-wide">設定預算與匯率</h3>
+                </div>
+                <button onclick="closeBudgetModal()" class="bg-white/20 hover:bg-white/40 p-2 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 bg-tokyo-bg space-y-4">
+                <!-- 預算設定 -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">總預算金額 (TWD)</label>
+                    <input type="number" id="budget-input" class="w-full bg-white rounded-xl p-4 text-xl font-mono font-black text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue border-none text-center" placeholder="例如: 60000">
+                </div>
+                
+                <hr class="border-tokyo-gray border-2 border-dashed">
+                
+                <!-- 匯率模式切換 -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">匯率來源設定 (JPY to TWD)</label>
+                    <div class="flex gap-2 mb-3 bg-white p-1.5 rounded-xl border border-tokyo-gray">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="rateMode" value="auto" class="peer hidden" onchange="toggleRateInput()">
+                            <div class="text-center py-2 rounded-lg text-sm font-bold text-gray-400 peer-checked:bg-tokyo-blue peer-checked:text-white peer-checked:shadow-sm transition-all">
+                                <i data-lucide="refresh-cw" class="w-3 h-3 inline-block mr-1"></i> 自動更新
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="rateMode" value="manual" class="peer hidden" onchange="toggleRateInput()">
+                            <div class="text-center py-2 rounded-lg text-sm font-bold text-gray-400 peer-checked:bg-tokyo-blue peer-checked:text-white peer-checked:shadow-sm transition-all">
+                                <i data-lucide="edit-3" class="w-3 h-3 inline-block mr-1"></i> 手動鎖定
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <input type="number" step="0.001" id="rate-input" class="w-full bg-white rounded-xl p-4 text-xl font-mono font-black text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue border-none text-center disabled:bg-gray-100 disabled:text-gray-400 transition-colors" placeholder="0.22">
+                    <p id="rate-hint" class="text-xs text-gray-400 mt-2 text-center font-bold">自動模式：每次開啟時抓取最新匯率</p>
+                </div>
+
+                <button onclick="saveBudgetFromModal()" class="nook-btn bg-tokyo-blue text-white border-[#3AAFA9] w-full py-3 shadow-md hover:bg-[#3AAFA9] flex justify-center items-center gap-2 mt-4">
+                    <i data-lucide="check" class="w-5 h-5"></i> 儲存設定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Input -->
+    <input type="file" id="fileImportShopping" accept=".json" style="display: none;" onchange="handleFileImport(this, 'shopping')">
+    <input type="file" id="fileImportPacking" accept=".json" style="display: none;" onchange="handleFileImport(this, 'packing')">
+
+    <script>
+        // *** STORAGE_KEY (v43_2026_custom_cat) ***
+        const STORAGE_KEY = 'tokyo_v43_2026_custom_cat';
+        let currentState = { activeTab: 'day1', activeToolId: null, activePhraseCategory: null, showTextBackup: false };
+
+        // --- 0. Theme System ---
+        const THEMES = {
+            'sakura': { name: '櫻花', main: '#FF9EAA', bg: '#FFFBF0', ink: '#5D4037', gold: '#FFE082', gray: '#F3E5D8', accent: '#B2DFDB' },
+            'matcha': { name: '抹茶', main: '#81C784', bg: '#F1F8E9', ink: '#33691E', gold: '#E6EE9C', gray: '#DCEDC8', accent: '#C5E1A5' },
+            'fuji':   { name: '富士', main: '#64B5F6', bg: '#E3F2FD', ink: '#0D47A1', gold: '#FFF176', gray: '#BBDEFB', accent: '#90CAF9' },
+            'wisteria':{ name: '紫藤', main: '#BA68C8', bg: '#F3E5F5', ink: '#4A148C', gold: '#FFD54F', gray: '#E1BEE7', accent: '#CE93D8' },
+            'latte':  { name: '拿鐵', main: '#A1887F', bg: '#EFEBE9', ink: '#3E2723', gold: '#D7CCC8', gray: '#D7CCC8', accent: '#BCAAA4' }
+        };
+
+        function applyTheme(themeKey) {
+            const t = THEMES[themeKey] || THEMES['sakura'];
+            const root = document.documentElement;
+            root.style.setProperty('--tokyo-main', t.main);
+            root.style.setProperty('--tokyo-bg', t.bg);
+            root.style.setProperty('--tokyo-ink', t.ink);
+            root.style.setProperty('--tokyo-gold', t.gold);
+            root.style.setProperty('--tokyo-gray', t.gray);
+            root.style.setProperty('--tokyo-accent', t.accent);
+            
+            // Save current choice
+            if (appData && appData.config) {
+                appData.config.theme = themeKey;
+                saveAll(false);
+            }
+        }
+
+        // --- 1. Utilities ---
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.innerHTML = `<i data-lucide="message-circle" class="w-5 h-5 text-tokyo-gold"></i><span>${msg}</span>`;
+            container.appendChild(el);
+            lucide.createIcons();
+            setTimeout(()=>el.classList.add('show'), 10);
+            setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 400); }, 2500);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function getMapUrl(q) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q + " 東京")}`; }
+        function getDailyRouteUrl(tl) { 
+            if (!tl || tl.length === 0) return "#";
+            const locs = tl.map(i => i.title + " 東京"); 
+            return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(locs[0])}&destination=${encodeURIComponent(locs[locs.length-1])}&waypoints=${encodeURIComponent(locs.slice(1,-1).join('|'))}&travelmode=transit`; 
+        }
+        function getSearchUrl(title) { return `https://www.google.com/search?q=${encodeURIComponent(title + " 東京 遊記 推薦 華人 2024 2025")}`; }
+
+        function getAllSpots() {
+             let spots = [];
+             if (appData && appData.itineraries) {
+                 Object.values(appData.itineraries).forEach(day => {
+                     if (day.timeline) {
+                         day.timeline.forEach(t => spots.push(t.title));
+                     }
+                 });
+             }
+             if (appData && appData.shoppingList) {
+                 appData.shoppingList.forEach(item => {
+                     if (item.location && item.location.trim() !== "") {
+                         spots.push(item.location.trim());
+                     }
+                 });
+             }
+             return [...new Set(spots)].sort();
+        }
+
+        async function fetchExchangeRate() {
+            // Check if user set rate manually
+            if (appData.config.manualRateSet) {
+                console.log("Manual rate active, skipping fetch.");
+                return;
+            }
+
+            try {
+                const res = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                const data = await res.json();
+                if (data?.rates?.TWD) {
+                    appData.config.currencyRate = data.rates.TWD;
+                    saveAll(false); 
+                    // Update Budget UI if open
+                    if(currentState.activeTab === 'toolbox' && currentState.activeToolId === 'budget') renderBudget();
+                    // Update Modal input if open
+                    const rateInput = document.getElementById('rate-input');
+                    if(rateInput) rateInput.value = data.rates.TWD;
+                }
+            } catch (e) { console.log("Rate API Error, using default"); }
+        }
+
+        function getCategoryColor(cat) {
+            const map = {
+                '登機前檢查': 'bg-red-100 text-red-600 border-red-200',
+                '3C用品': 'bg-blue-100 text-blue-600 border-blue-200',
+                '衣物': 'bg-pink-100 text-pink-600 border-pink-200',
+                '衣物鞋包': 'bg-pink-100 text-pink-600 border-pink-200',
+                '盥洗保養': 'bg-teal-100 text-teal-600 border-teal-200',
+                '藥品/保健': 'bg-green-100 text-green-600 border-green-200',
+                '其他小物': 'bg-gray-200 text-gray-600 border-gray-300',
+                '伴手禮': 'bg-orange-100 text-orange-600 border-orange-200',
+                '藥妝': 'bg-blue-100 text-blue-600 border-blue-200',
+                '生活雜貨': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                '電器': 'bg-purple-100 text-purple-600 border-purple-200',
+                '服飾': 'bg-rose-100 text-rose-600 border-rose-200',
+                '角色週邊': 'bg-cyan-100 text-cyan-600 border-cyan-200',
+                '文具': 'bg-emerald-100 text-emerald-600 border-emerald-200',
+                '自訂': 'bg-slate-100 text-slate-600 border-slate-300'
+            };
+            return map[cat] || 'bg-slate-100 text-slate-600 border-slate-300'; // Default for custom categories
+        }
+
+        // --- 2. Data ---
+        const appData = {
+            config: { 
+                bannerText: "TOKYO 2026", // New Banner Text
+                theme: 'sakura', 
+                currencyRate: 0.22, 
+                manualRateSet: false, 
+                budgetTWD: 60000, 
+                outboundDate: '2026-01-26T13:30', 
+                outboundNo: 'NH852', 
+                outboundNote: '座位號碼：\n25A、24A、25B、24B\n(ANA 集團 Air Japan 營運)',
+                returnDate: '2026-01-31T12:40', 
+                returnNo: 'NH853', 
+                returnNote: '座位號碼：\n24B、25B、24A、25A\n(全日本空輸營運)\n備註：已收到機型異動通知',
+                isFlightEditMode: false 
+            },
+            webLinks: [
+                { id: 'w1', title: '乘換案內 (交通查詢)', url: 'https://world.jorudan.co.jp/mln/zh-tw/' },
+                { id: 'w2', title: 'Google Maps', url: 'https://www.google.com/maps' },
+                { id: 'w3', title: 'JR東京廣域周遊券', url: 'https://www.jreast.co.jp/multi/zh-CHT/pass/tokyowide.html' },
+                { id: 'w4', title: 'Alpen Tokyo', url: 'https://tokyo.letsgojp.com/archives/534298/' },
+                { id: 'w5', title: 'GALA湯澤滑雪場', url: 'https://gala.co.jp/winter/tc/' },
+                { id: 'w9', title: '羽田機場 航廈間移動指南', url: 'https://tokyo-haneda.com/zh-CHT/access/travel_between_terminals/index.html' },
+                { id: 'w10', title: 'Tabelog (食べログ)', url: 'https://tabelog.com/tw/' }
+            ],
+            tabs: [
+                { id: 'day1', label: 'D1 移動日: 前往高崎', shortLabel: 'D1', type: 'itinerary' },
+                { id: 'day2', label: 'D2 雪國: 越後湯澤', shortLabel: 'D2', type: 'itinerary' },
+                { id: 'day3', label: 'D3 購物: 輕井澤', shortLabel: 'D3', type: 'itinerary' },
+                { id: 'day4', label: 'D4 潮流: 澀谷新宿', shortLabel: 'D4', type: 'itinerary' },
+                { id: 'day5', label: 'D5 觀光: 淺草上野', shortLabel: 'D5', type: 'itinerary' },
+                { id: 'day6', label: 'D6 賦歸: 返台', shortLabel: 'D6', type: 'itinerary' },
+                { id: 'toolbox', label: '旅人工具箱', shortLabel: '工具箱', type: 'container' }
+            ],
+            tools: [
+                { id: 'budget', label: '預算與記帳', icon: 'calculator', desc: '追蹤鈴錢支出' },
+                { id: 'shopping', label: '購物清單', icon: 'shopping-bag', desc: '管理必買物品' },
+                { id: 'packing', label: '行李清單', icon: 'briefcase', desc: '出發前檢查表' },
+                { id: 'phrases', label: '指差會話', icon: 'message-circle', desc: '溝通卡片' },
+                { id: 'weblinks', label: '網路百寶箱', icon: 'globe', desc: '常用網站連結' }
+            ],
+            itineraries: {
+                day1: {
+                    title: "北上群馬：前往高崎", subtitle: "TSA / HND / Ueno / Takasaki", intro: "旅程始於台北松山機場，直飛東京的門戶—羽田。今日的任務是穿越繁華的東京，前往群馬縣的交通樞紐「高崎市」。我們將搭乘上越新幹線的快速列車，短短半小時便能從東京都會圈切換至北關東的玄關，準備迎接明日的雪國之旅。",
+                    timeline: [
+                        { time: "13:30", title: "松山機場 (TSA) 起飛", tag: "交通", ratings:{}, desc: "從台北市中心的松山機場出發，享受小而美的機場便利性。起飛後請留意窗外，天氣好時能俯瞰台北101與基隆北海岸的壯麗景色。建議提早 2 小時抵達機場辦理登機，預留充裕時間安檢。", photoTip: "在3樓觀景台拍攝飛機起降，背景是台北101與大直橋的獨特構圖。", tips: "檢查護照有效期、Visit Japan Web QR Code 是否截圖備用。", access: "✈️ 台北松山 -> 東京羽田" },
+                        { 
+                            time: "17:30", 
+                            title: "羽田機場 (HND) 抵達", 
+                            tag: "交通", 
+                            ratings:{}, 
+                            desc: "抵達羽田機場第2航廈 (國際線區域)。入境後請跟隨「Monorail (單軌電車)」指標前往 B1 月台搭車。若需兌換 JR PASS，請前往第2航廈的 JR 東日本旅行服務中心。", 
+                            customLink: { label: "單軌列車時刻表", url: "https://docs.google.com/document/d/1Jn7lWXHpM2c8bzK0_4gUX3QZwFFgdiABvMN3ma2VAn0/edit?usp=sharing" },
+                            photoTip: "第2航廈出發大廳的設計感天花板與大片落地窗。", 
+                            tips: "JR PASS 兌換指引：抵達第 2 航廈（到達層在 1樓）後，請搭乘手扶梯或電梯上到 2樓（出境大廳）。尋找 「Welcome Center」 或 「Tourist Information Center」 的標示。單軌電車月台位於 B1。", 
+                            access: "📍 入境大廳直結單軌電車站 (第2航廈站 B1月台)。" 
+                        },
+                        { 
+                            time: "18:30", 
+                            title: "移動：羽田 -> 濱松町 -> 上野", 
+                            tag: "交通", 
+                            ratings:{}, 
+                            desc: "搭乘東京單軌電車 (Monorail) 從第2航廈出發。這是一段能在高架軌道上欣賞東京灣岸風景的旅程。列車穿梭在大樓與運河之間，約20-25分鐘抵達濱松町站。接著轉乘綠色的 JR 山手線前往上野，感受東京下班時段的人潮與活力。", 
+                            photoTip: "單軌電車窗外的天王洲 Isle 夜景，運河與大樓燈火輝映。", 
+                            tips: "1. 到達濱松町站，單軌電車月台在5樓，搭手扶梯下到3樓就會是JR山手線濱松町站。 2. 搭乘JR山手線抵達上野後，下車尋找「中央改札 (Central Gate)」的路標，那裡就是新幹線搭車的剪票口。", 
+                            access: "🚊 單軌濱松町站：使用「中央口」電扶梯轉乘 JR。" 
+                        },
+                        { time: "20:30", title: "APA飯店 高崎站前", tag: "住宿", ratings:{google:"3.8"}, desc: "抵達高崎站，這裡是「達摩之都」，站內隨處可見紅色的達摩不倒翁裝飾。高崎車站結構特殊：3樓是新幹線月台，2樓是主要車站大廳與連通道。出改札口後，往「西口」方向走，出2樓平台天橋即可直結 APA 飯店，完全不用下到地面，非常適合拖行李的旅客。", photoTip: "飯店外觀與高崎車站相連的夜景，以及站內的巨型達摩像。", tips: "⚠️ 本日住宿方案：沒附早餐。雖然沒早餐，但車站內有 Lawson 與 NewDays 便利商店，可買好隔日早餐與滑雪零食。", access: "📍 高崎站改札口(2F) ➔ 西口 ➔ 沿著天橋直結飯店 (全程平路，有電梯)。" }
+                    ]
+                },
+                day2: {
+                    title: "銀白世界：越後湯澤", subtitle: "Shinkansen / Gala Yuzawa / Skiing", intro: "「穿過縣界長長的隧道，便是雪國。」諾貝爾文學獎得主川端康成的名句，即將在我們眼前實現。搭乘新幹線穿越大清水隧道，窗外景色將從乾燥的關東平原瞬間轉變為豪雪地帶。今日我們將在 GALA 湯澤滑雪場，盡情享受粉雪的擁抱。",
+                    timeline: [
+                        { time: "08:37", title: "移動：高崎 -> 越後湯澤 (Toki 305)", tag: "交通", ratings:{}, desc: "上越新幹線「Toki 305號 (とき 305号)」。這是一班非常快速的列車，08:37 從高崎發車，09:05 即抵達湯澤，車程僅需 28 分鐘。這段路程雖短，卻是地形與氣候變化的精華。當列車鑽出漫長的隧道，眼前豁然開朗的銀白世界，往往會引起車廂內一陣驚呼。這就是傳說中的「雪國」。", photoTip: "捕捉列車駛出隧道，窗外景色瞬間變白的驚喜時刻。", tips: "建議劃位指定席，確保有位子。", access: "🚄 高崎站：新幹線改札口 (2F) ➔ 月台 (3F) 電扶梯/電梯皆有。" },
+                        { time: "09:30", title: "雪物嚴選 (租賃)", tag: "滑雪", ratings:{google:"4.8"}, desc: "抵達越後湯澤站後，前往台灣人經營或評價極高的「雪物嚴選」租賃裝備。這裡提供專業的 Burton 等品牌雪具，且溝通無礙。店員會細心協助挑選適合的雪靴尺寸與板長，確保滑雪過程安全舒適。換上帥氣的雪衣，整個人都熱血沸騰起來！", photoTip: "試穿完雪衣後，在店門口全身鏡前的定裝照。", tips: "記得攜帶護照以便租借。確認好歸還時間與接駁車班次。", access: "📍 越後湯澤站「西口」出站 ➔ 右轉步行約 3-5 分鐘 (西口有電梯)。" },
+                        { time: "10:30", title: "GALA湯澤滑雪場", tag: "滑雪", ratings:{google:"4.2"}, desc: "GALA 湯澤是世界上少數與新幹線車站直結的滑雪場。搭乘名為「Diligence」的 8 人座大型纜車，從山腳一口氣爬升至滑雪中心。隨著高度攀升，越後群山的壯麗雪景盡收眼底。抵達山頂後，一定要去敲響著名的「愛之鐘」，並在觀景台俯瞰整個魚沼平原的絕景。無論是滑雪課程還是玩雪盆，這裡的粉雪雪質都令人難忘。", photoTip: "在山頂「愛之鐘」展望台拍攝，背景是連綿的雪山。或是坐在雪地上向天空拋雪的動態瞬間。", tips: "注意保暖，護目鏡與手套必備。中午可在滑雪中心用餐 (如咖哩飯或披薩)，人多需排隊，建議避開 12 點尖峰。", access: "🚌 店家接駁車直達 GALA 纜車站 (Ski Center Cowabunga)。" },
+                        { time: "17:00", title: "結束滑雪 / 返回高崎", tag: "交通", ratings:{}, desc: "帶著疲憊但滿足的身體歸還裝備。搭乘新幹線返回高崎站。回程的車廂內溫暖舒適，看著窗外暮色漸沉的雪景，是滑雪後最放鬆的時刻。可以買罐熱咖啡或群馬限定的飲料在車上享用。", tips: "滑雪後肌肉緊繃，記得在車上做些簡單伸展。", access: "🚄 GALA 站直接搭新幹線 (或接駁車回湯澤站搭)。" },
+                        { 
+                            time: "18:30", 
+                            title: "高崎車站 晚餐 (Montres)", 
+                            tag: "美食", 
+                            ratings:{google:"4.0", tabelog:"3.45"}, 
+                            desc: "回到高崎站，晚餐首選群馬名物「登利平 (Torihei)」。若想悠閒內用，請前往車站西口直結商場「Montres (モントレー)」5樓的「登利平 Montres 店」，享用熱騰騰的鳥めし定食。若只想買回飯店吃，車站 2 樓的店舖僅提供外帶便當。鹹甜醬汁滲入米飯，令人食指大動。", 
+                            photoTip: "豐盛的晚餐與戰利品合照。", 
+                            tips: "Montres 餐廳層營業至 21:30 (最後點餐 21:00)。2樓便當店通常較早收攤，留意時間。", 
+                            access: "📍 Montres 商場 5F (內用) / 車站 2F (外帶)。" 
+                        },
+                        { time: "20:00", title: "APA飯店 高崎站前", tag: "住宿", ratings:{google:"3.8"}, desc: "回到溫暖的房間。今晚的住宿方案不同：⚠️ 有附早餐！這意味著明天早上可以悠閒地享用飯店提供的自助餐，通常包含日式烤魚、味噌湯與西式麵包沙拉，補充滿滿的能量再出發。", tips: "記得將早餐券放在顯眼處，確認明天用餐時間 (通常 6:30 或 7:00 開始)。", access: "📍 連通道直結，免淋雨。" }
+                    ]
+                },
+                day3: {
+                    title: "購物天堂：輕井澤", subtitle: "Karuizawa Outlet / Shopping / Move to Tokyo", intro: "告別高崎，我們前往日本皇室與文人雅士最愛的避暑勝地—輕井澤。這裡有著全日本最美、佔地最廣的 Outlet「輕井澤王子購物廣場」。在湖光山色中享受購物的樂趣，午後帶著滿滿的戰利品移動回東京，入住交通便利的品川。",
+                    timeline: [
+                        { time: "09:30", title: "移動：高崎 -> 輕井澤", tag: "交通", ratings:{}, desc: "搭乘北陸新幹線 (Hokuriku Shinkansen) 前往 **軽井沢 (かるいざわ, Karuizawa)** 站。車程僅需 15-20 分鐘，屁股還沒坐熱就到了。輕井澤海拔約 1000 公尺，氣溫通常比平地低 3-5 度，出站時請注意保暖。", photoTip: "坐在左邊的座位可以拍到富士山！", tips: "輕井澤站南口有大型置物櫃，但數量有限，建議先去 Outlet 寄放。", access: "🚄 輕井澤站：改札口在 3F，使用電梯下至 1F 南口。" },
+                        { time: "10:00", title: "輕井澤王子購物廣場", tag: "購物", ratings:{google:"4.3"}, desc: "車站南口出來，眼前就是廣闊的「輕井澤王子購物廣場」。這裡分為多個區域：精品林立的「Tree Mall」、戶外運動品牌的「East」、以及擁有美麗湖景的「Garden Mall」。一邊欣賞旁邊滑雪場的風景，一邊在開闊的綠地與湖畔間穿梭購物，是這裡獨有的體驗。NIKE、Adidas 旗艦店規模巨大，GUCCI 等精品店也常有驚喜折扣。", shoppingCategories:['服飾','鞋包','精品'], photoTip: "在 Garden Mall 的湖畔草地拍攝，背景是輕井澤滑雪場與藍天。", tips: "目標清單：跑鞋、外套、衣服。建議先去服務中心拿地圖，圈出品牌規劃路線，以免走到腿軟。", highlights: ["NIKE / Adidas / New Balance (款式超多)", "BEAMS / United Arrows (日系潮流)", "精品區 (Gucci/Saint Laurent等)"], access: "📍 南口直結 (全區平面/斜坡，無障礙友善)。" },
+                        { 
+                            time: "12:30", 
+                            title: "Outlet 美食街午餐", 
+                            tag: "美食", 
+                            ratings:{tabelog:"3.52"}, 
+                            desc: "Outlet 內的「味之街」與「美食廣場」匯集了信州美食。推薦「明治亭」的醬汁豬排丼，厚實的豬排淋上特製酸甜醬汁，下飯一絕。或是品嚐信州著名的蕎麥麵，清爽彈牙。也可以選擇「Kua'Aina」漢堡，享受美式度假風情。另外，擁有百年歷史的「藤屋洋食」也是絕佳選擇，招牌漢堡排與歐風咖哩深受好評。", 
+                            tips: "用餐時間人潮眾多，建議避開 12:00-13:00 尖峰，或先抽號碼牌再去逛逛。", 
+                            access: "📍 味之街 (靠近車站側)。" 
+                        },
+                        { time: "16:00", title: "移動：輕井澤 -> 上野", tag: "交通", ratings:{}, desc: "購物結束後，搭乘新幹線從 **軽井沢 (かるいざわ, Karuizawa)** 回到上野站 (約 1 小時)。建議在新幹線上稍作休息，養精蓄銳。", tips: "若行李很多，盡量利用車站電梯。", access: "🚄 輕井澤 -> 上野 (新幹線)。" },
+                        { 
+                            time: "17:10", 
+                            title: "上野站 Doughnut Mori", 
+                            tag: "美食", 
+                            ratings:{tabelog:"3.60"}, 
+                            desc: "抵達上野站後，先別急著出站！在 **上野新幹線出剪票口前** (改札內)，尋找傳說中的「Doughnut Mori」。這是一間口感鬆軟、用料實在的甜甜圈店。在這裡買幾個當作今晚的點心或明天的早餐，是內行人的隱藏版行程。", 
+                            tips: "位於新幹線付費區內 (改札內)，轉乘在來線前記得先去買。若找不到，可詢問站務員。", 
+                            access: "📍 JR 上野站 新幹線改札口內 (B4/B3層附近)。" 
+                        },
+                        { time: "17:30", title: "移動：上野 -> 品川", tag: "交通", ratings:{}, desc: "買完甜甜圈後，通過轉乘改札口進入 JR 在來線區域。搭乘上野東京線 (Ueno-Tokyo Line) 前往 **品川 (しながわ, Shinagawa)** 站 (約 20 分鐘)。", tips: "上野東京線比山手線停站少，速度較快。", access: "🚄 上野站轉乘：使用大廳層電梯轉乘在來線。" },
+                        { time: "18:00", title: "品川王子大飯店", tag: "住宿", ratings:{google:"3.9"}, desc: "抵達 **品川 (しながわ, Shinagawa)**，入住地標性的「品川王子大飯店」。這是一座「城中之城」，擁有水族館、電影院與保齡球館。飯店大廳氣派繁忙，客房數量驚人。品川站是東京交通大動脈，前往羽田機場或東京各地都極其便利。飯店對面就是 Wing 高輪，地下有高質感超市。", photoTip: "從房間窗戶拍攝東京夜景，運氣好若住高樓層可看到東京鐵塔。", tips: "⚠️ 本日住宿方案：沒有附早餐。可至附近 Wing 高輪地下超市或車站內的便利商店購買。", access: "📍 JR 品川站「高輪口 (西口)」出站 ➔ 過馬路即達 Main Tower (注意：高輪口目前施工中，請遵循無障礙指標)。" }
+                    ]
+                },
+                day4: {
+                    title: "潮流特區：澀谷原宿", subtitle: "Shibuya / Harajuku / Shinjuku / Pokemon", intro: "今天是東京潮流文化的深度巡禮。早晨直奔澀谷 PARCO 朝聖 Nintendo Tokyo，並品嚐滋滋作響的極味屋漢堡排。隨後在宮下公園的空中綠洲喝杯星巴克，再去原宿明治神宮散步。傍晚逛逛 3COINS 旗艦店，最後在新宿 Alpen 朝聖整面跑鞋牆。",
+                    timeline: [
+                        { time: "10:00", title: "澀谷 PARCO (寶可夢中心)", tag: "購物", ratings:{google:"4.4"}, desc: "一早直奔澀谷 PARCO 6F。Pokemon Center Shibuya 入口處有一尊像是被基因改造的超夢 (Mewtwo) 在培養槽中沉睡，充滿科幻感。同層樓還有 Nintendo Tokyo (有巨大的瑪利歐雕像) 與 CAPCOM 商店，匯集了日本最頂尖的動漫遊戲 IP，絕對能逛得非常過癮。", shoppingCategories:['角色週邊'], photoTip: "入口處的超夢培養槽模型，以及 Nintendo Tokyo 的巨型瑪利歐雕像。", tips: "這層樓人潮非常多，建議開店 (10:00) 或是平日前往以避開擁擠。", highlights: ["Pokemon Center Mewtwo", "Nintendo Tokyo", "JUMP SHOP"], access: "📍 澀谷站 A6 出口 (直結/有電梯) 或從八公口步行至公園通。" },
+                        { time: "11:00", title: "極味屋 (Kiwamiya) 澀谷", tag: "美食", ratings:{google:"4.1", tabelog:"3.49"}, desc: "就在 PARCO 地下 1F 的「Chaos Kitchen」。來自福岡的超人氣排隊名店「極味屋」。招牌是伊萬里牛漢堡排，上桌時表面微焦，內部幾乎是全生。你需要用筷子切下一小塊，放在面前燒得滾燙的圓石上，發出「滋滋」聲響，烤到喜歡的熟度後沾醬食用。肉汁在口中爆發的滋味令人難忘。", photoTip: "肉排在鐵板圓石上冒煙滋滋作響的動態畫面。", tips: "極度熱門，建議 11:00 開店第一輪進去吃最省時。", access: "📍 澀谷 PARCO B1F (商場內有手扶梯/電梯)。" },
+                        { time: "13:00", title: "MAGNET by SHIBUYA109", tag: "購物", ratings:{google:"4.0"}, desc: "吃飽後繼續在澀谷探索，移動到澀谷站前的「MAGNET by SHIBUYA109」。這裡常有動漫快閃店或 AMNIBUS STORE，是尋找「崩壞：星穹鐵道」週邊的熱門地點。頂樓還有展望台可以俯瞰澀谷十字路口的人潮。", shoppingCategories:['角色週邊'], photoTip: "頂樓展望台拍攝澀谷十字路口。", tips: "週邊商品流動快，建議先確認樓層指南。", access: "📍 澀谷站 A12 出口直結 (八公口對面)。" },
+                        { time: "14:00", title: "宮下公園 & 星巴克", tag: "景點", ratings:{google:"4.3"}, desc: "步行前往 MIYASHITA PARK (宮下公園)。這是一座結合公園、飯店與商場的立體建築。頂樓有哆啦A夢與大雄的雕像，還有一間設計感十足的「星巴克 (Starbucks)」。這間店由藤原浩參與設計概念，純白色的建築佇立在綠地中，非常時髦。點杯咖啡在草地上休息，享受城市中的片刻寧靜。", shoppingCategories:['角色週邊','咖啡'], photoTip: "純白色的星巴克建築與藍天綠地，以及哆啦A夢紀念雕像。", tips: "星巴克人潮眾多，可善用 Mobile Order 點餐。若沒位子，外帶到旁邊長椅坐也很舒服。", access: "📍 澀谷站 B1 出口 (有電梯) 步行 3 分鐘，搭手扶梯至頂樓 (4F)。" },
+                        { time: "15:30", title: "明治神宮", tag: "文化", ratings:{google:"4.6"}, desc: "休息後，沿著鐵道旁步行至原宿（約10-15分鐘），前往「明治神宮」散步消化。從熱鬧的澀谷來到這裡，彷彿進入另一個世界。穿過巨大的原木鳥居，腳踩著碎石參道（玉砂利），心情會自然平靜下來。這裡供奉著明治天皇，擁有廣達 70 萬平方公尺的人工林，是東京市中心的綠洲。", photoTip: "入口處巨大的第一鳥居，或是整面壯觀的清酒樽牆 (Sake Barrels)。", tips: "進入本殿前記得在手水舍洗手漱口。參拜禮儀為：二禮、二拍手、一禮。", access: "📍 JR 原宿站「西口」步行 1 分鐘即達入口。" },
+                        { time: "17:00", title: "原宿 3COINS & 下午茶", tag: "購物", ratings:{google:"4.1"}, desc: "離開神宮後，前往附近的「3COINS 原宿本店」。這間旗艦店商品種類最齊全，不僅有標誌性的 300 日圓雜貨，還有許多原宿限定的可愛零食與文具。逛累了可以在原宿或表參道找間咖啡廳 (如 Blue Bottle 或 Harajuku gyozaro 旁的甜點店) 享用下午茶，休息一下。", shoppingCategories:['雜貨'], tips: "原宿本店常有限定聯名商品，進門處的特設展區必看。", access: "📍 明治神宮前站「出口 7」或 原宿站「表參道口」。" },
+                        { time: "18:30", title: "新宿 Alpen Tokyo", tag: "購物", ratings:{google:"4.5"}, desc: "移動到新宿東口，朝聖日本最大規模的運動用品旗艦店「Alpen Tokyo」。這棟大樓擁有地上 8 層、地下 2 層。1-2 樓通常是跑鞋專區，展示著 Nike, Hoka, Asics 等各大品牌的最新款與限定色，牆面陳列極為壯觀。無論是競速跑鞋還是緩震慢跑鞋，這裡款式最齊全，且店員專業度極高。", shoppingCategories:['鞋包'], customLink: { label: "Alpen 介紹", url: "https://tokyo.letsgojp.com/archives/534298/" }, photoTip: "壯觀的整面鞋牆，或是試穿新鞋的特寫。", tips: "外國人可退稅，記得帶護照。這裡也有露營用品區 (Alpen Outdoors)，有時間可上樓逛逛。", access: "📍 新宿站「東口」出站 (平面層) ➔ 左前方 Uniqlo 旁即是 (大樓有電梯)。" },
+                        { time: "20:30", title: "品川王子大飯店", tag: "住宿", ratings:{google:"3.9"}, desc: "回到品川。雖然飯店不含早餐，但品川站周邊生活機能強大。推薦前往飯店對面 Wing 高輪 WEST 地下一樓的「京急 STORE (Keikyu Store)」超市，或是高級超市 Kinokuniya 購買宵夜、優格與明天的早餐。品川站內的 Ecute 也有許多熟食與便當選擇。", tips: "⚠️ 住宿方案：沒有附早餐。建議順便買些泡澡粉，舒緩這幾天走路的疲勞。", access: "📍 JR 品川站「高輪口」出來過馬路即達。" }
+                    ]
+                },
+                day5: {
+                    title: "下町風情：淺草上野", subtitle: "Asakusa / Ueno / Akihabara", intro: "旅程進入尾聲，我們將體驗東京的新舊交融。早晨在淺草寺感受江戶下町的信仰與人情味，中午在上野享用燒肉界的頂點—敘敘苑。下午潛入秋葉原的電器街，體驗在月台喝牛奶的獨特文化，並朝聖動漫迷的聖地，晚餐則以米其林推薦的大阪燒畫下完美句點。",
+                    timeline: [
+                        { time: "09:00", title: "淺草寺 參拜", tag: "觀光", ratings:{google:"4.5"}, desc: "搭車前往淺草。從雷門巨大的紅燈籠下穿過，這是東京最經典的畫面。走過熱鬧的仲見世通，兩旁是販賣人形燒與煎餅的老舖。抵達本堂前，記得在巨大的香爐前將煙撥向自己身體不適的部位，祈求健康。淺草充滿了江戶時代的庶民活力，在此求一支籤，看看未來的運勢。", photoTip: "雷門大燈籠底部精緻的龍形木雕，以及從吾妻橋拍攝晴空塔與金色啤酒泡沫的經典角度。", tips: "仲見世通不可邊走邊吃，請在店家旁定點吃完。早上去人比較少，拍照更美。", access: "📍 銀座線淺草站：出口 1 (雷門旁，有電梯) / 淺草線：出口 A2b (有電梯)。" },
+                        { time: "11:00", title: "上野 敘敘苑燒肉", tag: "美食", ratings:{google:"4.3", tabelog:"3.20"}, desc: "前往上野，享用著名的「敘敘苑」午間套餐。敘敘苑是日本高級燒肉的代名詞，雖然晚餐價格不菲，但午間套餐 CP 值極高。包含肉質鮮美的燒肉、招牌沙拉、泡菜、湯品與甜點。在高雅的環境中，聽著肉片滋滋作響，享受入口即化的油脂香氣，是旅途中最奢侈的享受。", photoTip: "精緻的燒肉擺盤，以及窗外可能的上野公園景色。", tips: "強烈建議事先上網訂位，或 11:00 開店前就去排隊，以免向隅。招牌敘敘苑沙拉醬非常好吃。", access: "📍 上野站「不忍口」過馬路 ➔ 3153 會館或上野丸井 (皆有電梯)。" },
+                        { time: "13:00", title: "上野 採買 (OS Drug)", tag: "購物", ratings:{}, desc: "吃飽後在上野阿美橫丁附近進行最後採買。首推「OS Drug (OSドラッグ)」，雖然店面擁擠且 **只收現金**，也無法退稅，但其含稅價往往比其他家免稅後還便宜，是在地人的省錢祕技。別忘了再去「二木的菓子」掃貨，這裡有各式各樣的日本零食與伴手禮，種類多到讓人眼花撩亂。", shoppingCategories:['藥妝','伴手禮'], tips: "OS Drug 藥品與化妝品櫃台可能分開。這裡必買牙膏與合利他命。", access: "📍 阿美橫丁內 (OS Drug 位於入口處附近)。" },
+                        { time: "15:00", title: "秋葉原站 月台牛奶", tag: "體驗", ratings:{google:"4.2"}, desc: "移動到秋葉原。有一項內行人的必做清單：不要急著出站！先去 JR 秋葉原站總武線 6 號月台，尋找「牛奶攤 (Milk Stand)」。這是一個販賣各地玻璃瓶裝牛奶的小舖，種類繁多。在此站著喝完一瓶冰涼的牛奶，是秋葉原獨有的儀式感。喝完將瓶子回收給店家後，再滿足地刷卡出站。", photoTip: "手持玻璃瓶牛奶，背景是繁忙的黃色總武線電車。", tips: "牛奶需在攤位旁喝完，不能帶走。推薦「飛驒牛奶」或「大山牛奶」。", access: "📍 JR 秋葉原站內「總武線 6 號月台」(往千葉方向)。" },
+                        { time: "15:40", title: "Animate & 無線電會館", tag: "購物", ratings:{google:"4.3"}, desc: "出站後展開動漫巡禮。首先是「Animate 秋葉原」，擁有整棟的漫畫、輕小說與周邊。接著前往就在車站旁的「秋葉原無線電會館 (Radio Kaikan)」。這裡被稱為御宅族的百貨公司，除了模型公仔，更有許多店家專門販售「寶可夢卡牌 (Pokemon Cards)」，從單卡、補充包到卡盒應有盡有，是卡牌玩家的聖地。", shoppingCategories:['角色週邊','卡牌'], photoTip: "無線電會館著名的黃色招牌，以及滿滿卡牌的陳列櫃。", tips: "卡牌價格浮動，建議多比價。無線電會館內也有海洋堂 Hobby Lobby 等模型店。", access: "📍 JR 秋葉原站「電氣街口」南側出口即達無線電會館。" },
+                        { time: "18:00", title: "品川 大阪燒 & 超市", tag: "美食", ratings:{google:"4.1", tabelog:"3.58"}, desc: "回到品川，晚餐前往品川 Front Building 的「きじ (Kiji)」大阪燒。這家店源自大阪，曾獲米其林推薦。師傅在鐵板上熟練地翻炒，將高麗菜與麵糊煎得外酥內軟，淋上濃郁的醬汁與美乃滋，柴魚片在熱氣中飛舞。吃完後去品川東急 Store 逛超市，購買最後想吃的日本水果或零食。", photoTip: "大阪燒上柴魚片因熱氣而舞動的瞬間。", tips: "Kiji 大阪燒非常熱門，建議提早前往。大阪燒通常現點現做需等待約 20 分鐘。", access: "📍 品川站「港南口 (東口)」 ➔ 經連通道步行 3 分鐘 (有電梯)。" },
+                        { time: "21:00", title: "品川王子大飯店", tag: "住宿", ratings:{google:"3.9"}, desc: "最後一晚，在房間內整理這幾天的戰利品。這是一項大工程，需要運用「收納的藝術」將跑鞋、藥妝、伴手禮塞進行李箱。利用飯店附近的超市做最後補給，買瓶日本酒或布丁，慶祝這趟旅程的圓滿。", tips: "⚠️ 住宿方案：沒有附早餐。記得預約明天去機場的交通 (或查好京急線班次)，並再次確認護照與機票。", access: "📍 JR 品川站「高輪口」。" }
+                    ]
+                },
+                day6: {
+                    title: "賦歸：返回台灣", subtitle: "Haneda Airport T2 / Flight to Taipei", intro: "旅程的終點，也是回憶的起點。上午辦理退房，前往羽田機場第2航廈。這裡擁有挑高明亮的國際線出發大廳，雖然店鋪不如第3航廈復古，但現代感十足且人潮相對較少。於免稅店補齊伴手禮，帶著滿滿的回憶與戰利品飛回松山機場，結束這趟充實的東京之旅。",
+                    timeline: [
+                        { time: "09:30", title: "辦理退房 / 前往機場", tag: "交通", ratings:{}, desc: "辦理 Check-out。從品川站搭乘「京急線 (Keikyu Line)」直達羽田機場第1、第2航廈站。這是前往羽田最快的方式，僅需約 20 分鐘。沿途可以欣賞東京南部的城市景觀，慢慢向這座城市道別。", tips: "品川站京急月台在 JR 隔壁，指標清楚。請確認搭乘往「羽田空港」方向的列車，並坐到終點站 (第1・第2航廈)。", access: "🚊 品川站「京急線」月台 (高輪口側，有專用電梯)。" },
+                        { time: "10:30", title: "羽田機場 (HND) T2 報到", tag: "回程", ratings:{}, desc: "抵達羽田機場第2航廈 (國際線區域)。這裡主要是 ANA 的國際線航班使用。出境審查後，把握最後機會在免稅店購物！雖然店舖較新，但基本的「薯條三兄弟」、「白色戀人」、「Royce 巧克力」等熱門伴手禮一樣買得到。第2航廈還有能近距離觀賞飛機起降的觀景台，視野極佳。", shoppingCategories:['伴手禮'], photoTip: "第2航廈巨大的落地窗與停機坪上的全日空飛機。", tips: "第2航廈國際線區域與國內線相連，請留意「國際線 (International)」指標。", access: "📍 羽田第2航廈出境大廳 (3F/2F)。" },
+                        { time: "12:40", title: "飛機起飛", tag: "交通", ratings:{}, desc: "搭乘班機飛往台北松山機場。在飛機上回味這六天的點點滴滴：高崎的達摩、湯澤的粉雪、輕井澤的購物、東京的繁華與美味。再見東京，期待下次再相見！", access: "✈️ 東京羽田 ->台北松山" },
+                        { time: "15:30", title: "抵達松山機場 (TSA)", tag: "回程", ratings:{}, desc: "平安抵達台灣。松山機場進出市區快速方便，很快就能回到溫暖的家，整理戰利品並休息。", access: "📍 台北松山" }
+                    ]
+                }
+            },
+            shoppingList: [
+                { id: 's1', category: '鞋包', recipient: '自己', item: '跑鞋 (Nike/Hoka/Asics)', location: '新宿 Alpen / 輕井澤Outlet', note: '新宿Alpen款式多，輕井澤便宜', checked: false },
+                { id: 's2', category: '服飾', recipient: '自己', item: '外套 / 衣服', location: '輕井澤 Outlet', note: 'Beams / United Arrows', checked: false },
+                { id: 's4', category: '角色週邊', recipient: '自己', item: '新穹鐵道週邊', location: '澀谷 MAGNET / 秋葉原', note: 'MAGNET by SHIBUYA109 或 Animate', checked: false },
+                { id: 's5', category: '伴手禮', recipient: '親友', item: '東京香蕉 / NY Cheese', location: '上野 / 機場', note: '最後一天買', checked: false },
+                { id: 's6', category: '藥妝', recipient: '自己', item: '合利他命 / 止痛藥', location: '上野 OS Drug', note: '上野便宜', checked: false },
+                { id: 's7', category: '雜貨', recipient: '自己', item: '3COINS 雜貨', location: '原宿 3COINS 本店', note: '限定商品', checked: false },
+                { id: 's8', category: '美食', recipient: '自己', item: '秋葉原月台牛奶', location: '秋葉原 6號月台', note: '玻璃瓶裝', checked: false },
+                { id: 's9', category: '美食', recipient: '自己', item: '敘敘苑燒肉醬', location: '上野 敘敘苑', note: '可以買回家', checked: false },
+                { id: 's10', category: '美食', recipient: '自己', item: '超市零食/泡麵', location: '品川超市', note: '宵夜與早餐', checked: false },
+                { id: 's11', category: '藥妝', recipient: '自己', item: '肌研極潤 精緻高效保濕精華霜', location: '上野 松本清 / OS Drug', note: '紅色罐裝 (Perfect Gel)', checked: false },
+                { id: 's12', category: '藥妝', recipient: '自己', item: 'LION Check-Up 小紅管牙膏 (標準款)', location: '上野 OS Drug', note: '高氟防蛀 (Standard)', checked: false },
+                { id: 's13', category: '藥妝', recipient: '自己', item: 'LION Check-Up 小金管牙膏 (護齦)', location: '上野 OS Drug', note: '牙根護理 (Rootcare)', checked: false },
+                { id: 's14', category: '伴手禮', recipient: '自己/親友', item: '一蘭拉麵 (博多細麵直條麵)', location: '唐吉訶德 / 一蘭店舖', note: '盒裝或袋裝皆可', checked: false },
+                { id: 's_os1', category: '衣物', recipient: '自己', item: '岡山okamoto保暖襪', location: '上野 OS Drug', note: '保暖必備', checked: false },
+                { id: 's_os2', category: '藥妝', recipient: '自己', item: '大正漢方 胃腸藥微粒 48包', location: '上野 OS Drug', note: '常備藥', checked: false },
+                { id: 's_os3', category: '藥妝', recipient: '自己', item: 'Melano CC酵素洗面乳', location: '上野 OS Drug', note: '人氣商品', checked: false },
+                { id: 's_os4', category: '藥妝', recipient: '自己', item: 'EVE 止痛藥', location: '上野 OS Drug', note: '頭痛生理痛', checked: false },
+                { id: 's_os5', category: '藥妝', recipient: '自己', item: '曼秀雷敦 蕁麻疹軟膏', location: '上野 OS Drug', note: '止癢', checked: false }
+            ],
+            packingList: [
+                { id: 'p01', category: '登機前檢查', item: '護照 (有效期限6個月以上)', checked: false },
+                { id: 'p02', category: '登機前檢查', item: '日幣 & 信用卡', checked: false },
+                { id: 'p03', category: '登機前檢查', item: 'Visit Japan Web QR Code', checked: false },
+                { id: 'p04', category: '登機前檢查', item: '行動電源 (手提)', checked: false },
+                { id: 'p05', category: '登機前檢查', item: '保溫瓶的水要倒掉', checked: false },
+                { id: 'p06', category: '登機前檢查', item: '藍芽耳機', checked: false },
+                { id: 'p07', category: '登機前檢查', item: '相機電池', checked: false },
+                { id: 'p08', category: '登機前檢查', item: 'iPad', checked: false },
+                { id: 'p11', category: '3C用品', item: 'eSIM', checked: false },
+                { id: 'p12', category: '3C用品', item: '充電器x2', checked: false },
+                { id: 'p13', category: '3C用品', item: '充電線x3', checked: false },
+                { id: 'p31', category: '衣物', item: '保暖外套 (滑雪/輕井澤冷)', checked: false },
+                { id: 'p32', category: '衣物', item: '換洗衣物', checked: false },
+                { id: 'p33', category: '衣物', item: '手套/毛帽 (滑雪用)', checked: false },
+                { id: 'p34', category: '衣物', item: '好走的鞋', checked: false },
+                { id: 'p41', category: '盥洗保養', item: '牙刷/牙膏 (部分飯店不主動提供)', checked: false },
+                { id: 'p42', category: '盥洗保養', item: '保濕乳液 (日本乾燥)', checked: false },
+                { id: 'p51', category: '藥品/保健', item: '感冒/腸胃藥', checked: false },
+                { id: 'p61', category: '其他小物', item: '折疊傘', checked: false },
+                { id: 'p62', category: '其他小物', item: '購物袋 (大容量)', checked: false }
+            ],
+            expenses: [],
+            phrases: {
+                categories: ['行程專屬', '星巴克/咖啡', '麥當勞/速食', '交通移動', '新幹線', '住宿飯店', '便利超商', '居酒屋/燒肉', '餐廳點餐', '購物退稅', '滑雪體驗', '緊急求助'],
+                items: [
+                    // --- 行程專屬 ---
+                    { jp: '品川 (しながわ)', ruby: 'Shinagawa', tw: '前往：品川 (Shinagawa)', category: '行程專屬' },
+                    { jp: '軽井沢 (かるいざわ)', ruby: 'Karuizawa', tw: '前往：輕井澤 (Karuizawa)', category: '行程專屬' },
+                    { jp: '高崎 (たかさき)', ruby: 'Takasaki', tw: '前往：高崎 (Takasaki)', category: '行程專屬' },
+                    { jp: '越後湯沢 (えちごゆざわ)', ruby: 'Echigo-Yuzawa', tw: '前往：越後湯澤 (Echigo-Yuzawa)', category: '行程專屬' },
+                    { jp: 'Tシャツを作りたいです。', ruby: 'T-shatsu o tsukuritai desu.', tw: '我想製作 T-shirt (寶可夢)。', category: '行程專屬' },
+                    { jp: 'ハンバーグ定食をお願いします。', ruby: 'Hanbāgu teishoku o onegaishimasu.', tw: '請給我漢堡排定食 (極味屋)。', category: '行程專屬' },
+                    { jp: 'ランニングシューズはどこですか？', ruby: 'Ranningu shūzu wa doko desu ka?', tw: '請問跑鞋在哪裡？(Alpen)', category: '行程專屬' },
+                    { jp: 'スターレイルのグッズはありますか？', ruby: 'Sutāreiru no guzzu wa arimasu ka?', tw: '有星穹鐵道的週邊嗎？', category: '行程專屬' },
+                    { jp: 'ミルクを一本ください。', ruby: 'Miruku o ippon kudasai.', tw: '請給我一瓶牛奶 (秋葉原)。', category: '行程專屬' },
+                    { jp: 'SHIBUYA SKYの入り口はどこですか？', ruby: 'SHIBUYA SKY no iriguchi wa doko desu ka?', tw: '請問 SHIBUYA SKY 的入口在哪裡？', category: '行程專屬' },
+                    { jp: 'TeamLabの予約画面です。', ruby: 'TeamLab no yoyaku gamen desu.', tw: '這是我 TeamLab 的預約畫面。', category: '行程專屬' },
+                    { jp: '六厘舎の列はここですか？', ruby: 'Rokurinsha no retsu wa koko desu ka?', tw: '請問六厘舍是在這裡排隊嗎？', category: '行程專屬' },
+                    { jp: 'このバスはGALA湯沢に行きますか？', ruby: 'Kono basu wa GALA Yuzawa ni ikimasu ka?', tw: '這班巴士會去 GALA 湯澤嗎？', category: '行程專屬' },
+                    { jp: '3COINSはどこですか？', ruby: 'Surī koinzu wa doko desu ka?', tw: '請問 3COINS 在哪裡？', category: '行程專屬' },
+                    { jp: '明治神宮は何時までですか？', ruby: 'Meiji Jingū wa nanji made desu ka?', tw: '明治神宮開到幾點？', category: '行程專屬' },
+
+                    // --- 星巴克/咖啡 (新增：依據川崎太太影片) ---
+                    { jp: 'トールサイズでお願いします。', ruby: 'Tōru saizu de onegaishimasu.', tw: '請給我 Tall (中杯)。', category: '星巴克/咖啡' },
+                    { jp: 'グランデ / ベンティ', ruby: 'Gurande / Benti', tw: '大杯 (Grande) / 特大杯 (Venti)。', category: '星巴克/咖啡' },
+                    { jp: 'ホット / アイス', ruby: 'Hotto / Aisu', tw: '熱的 / 冰的。', category: '星巴克/咖啡' },
+                    { jp: 'オーツミルクに変更できますか？', ruby: 'Ōtsu miruku ni henkō dekimasu ka?', tw: '可以換成燕麥奶嗎？', category: '星巴克/咖啡' },
+                    { jp: 'ソイミルク / アーモンドミルク', ruby: 'Soimiruku / Āmondomiruku', tw: '豆漿 / 杏仁奶。', category: '星巴克/咖啡' },
+                    { jp: 'ディカフェにできますか？', ruby: 'Dikafe ni dekimasu ka?', tw: '可以做成低咖啡因嗎？', category: '星巴克/咖啡' },
+                    { jp: '氷少なめでお願いします。', ruby: 'Kōri sukuname de onegaishimasu.', tw: '請少冰 (牛奶會變多嗎? 不一定)。', category: '星巴克/咖啡' },
+                    { jp: 'シロップ多め / 少なめ', ruby: 'Shiroppu ōme / sukuname', tw: '糖漿 多一點 / 少一點。', category: '星巴克/咖啡' },
+                    { jp: '紙袋をください。', ruby: 'Kamibukuro o kudasai.', tw: '請給我紙袋 (外帶用)。', category: '星巴克/咖啡' },
+                    { jp: '店内（ここ）で飲みます。', ruby: 'Tennai (Koko) de nomimasu.', tw: '我要內用。', category: '星巴克/咖啡' },
+
+                    // --- 麥當勞/速食 (新增：依據川崎太太影片) ---
+                    { jp: 'セットでお願いします。', ruby: 'Setto de onegaishimasu.', tw: '請做成套餐。', category: '麥當勞/速食' },
+                    { jp: '単品（たんぴん）でいいです。', ruby: 'Tanpin de ii desu.', tw: '單點就好。', category: '麥當勞/速食' },
+                    { jp: 'サイドメニューはポテトで。', ruby: 'Saido menyū wa poteto de.', tw: '附餐要薯條。', category: '麥當勞/速食' },
+                    { jp: 'ナゲットのソースはバーベキューで。', ruby: 'Nagetto no sōsu wa bābekyū de.', tw: '雞塊醬要 BBQ 口味。', category: '麥當勞/速食' },
+                    { jp: 'マスタードソース', ruby: 'Masutādo sōsu', tw: '黃芥末醬。', category: '麥當勞/速食' },
+                    { jp: '持ち帰り（テイクアウト）です。', ruby: 'Mochikaeri (Teikuauto) desu.', tw: '我要外帶。', category: '麥當勞/速食' },
+                    { jp: 'ケチャップをください。', ruby: 'Kechappu o kudasai.', tw: '請給我番茄醬。', category: '麥當勞/速食' },
+
+                    // --- 居酒屋/燒肉 (擴充) ---
+                    { jp: 'とりあえず生二つ！', ruby: 'Toriaezu nama futatsu!', tw: '先來兩杯生啤！(經典開場白)', category: '居酒屋/燒肉' },
+                    { jp: 'お通し（おとおし）', ruby: 'O tōshi', tw: '小菜 (通常需付費的座位費)。', category: '居酒屋/燒肉' },
+                    { jp: 'おすすめの串焼きは？', ruby: 'Osusume no kushiyaki wa?', tw: '推薦的串燒是什麼？', category: '居酒屋/燒肉' },
+                    { jp: '塩（しお） / タレ', ruby: 'Shio / Tare', tw: '鹽味 / 醬燒 (點串燒時用)。', category: '居酒屋/燒肉' },
+                    { jp: '取り皿をください。', ruby: 'Torizara o kudasai.', tw: '請給我分裝盤。', category: '居酒屋/燒肉' },
+                    { jp: 'お冷（おひや）をください。', ruby: 'Ohiya o kudasai.', tw: '請給我冰水 (最後解酒用)。', category: '居酒屋/燒肉' },
+                    { jp: 'お会計（かいけい）お願いします。', ruby: 'Okaikei onegaishimasu.', tw: '麻煩結帳。', category: '居酒屋/燒肉' },
+                    
+                    // --- 交通移動 ---
+                    { jp: 'Suicaにチャージしたいです。', ruby: 'Suica ni chāji shitai desu.', tw: '我想儲值 Suica 卡。', category: '交通移動' },
+                    { jp: 'この電車は新宿に行きますか？', ruby: 'Kono densha wa Shinjuku ni ikimasu ka?', tw: '這班電車會去新宿嗎？', category: '交通移動' },
+                    { jp: '駅はどこですか？', ruby: 'Eki wa doko desu ka?', tw: '請問車站在哪裡？', category: '交通移動' },
+                    { jp: '路線図をください。', ruby: 'Rosenzu o kudasai.', tw: '請給我路線圖。', category: '交通移動' },
+                    { jp: 'タクシー乗り場はどこですか？', ruby: 'Takushī noriba wa doko desu ka?', tw: '請問計程車招呼站在哪裡？', category: '交通移動' },
+
+                    // --- 新幹線 ---
+                    { jp: '指定席はどこですか？', ruby: 'Shiteiseki wa doko desu ka?', tw: '請問指定席車廂在哪裡？', category: '新幹線' },
+                    { jp: '自由席はどこですか？', ruby: 'Jiyūseki wa doko desu ka?', tw: '請問自由席車廂在哪裡？', category: '新幹線' },
+                    { jp: '荷物置き場はありますか？', ruby: 'Nimotsu okiba wa arimasu ka?', tw: '請問有放行李的地方嗎？', category: '新幹線' },
+                    { jp: '駅弁を買いたいです。', ruby: 'Ekiben o kaitai desu.', tw: '我想買鐵路便當。', category: '新幹線' },
+
+                    // --- 住宿飯店 ---
+                    { jp: 'チェックインをお願いします。', ruby: 'Chekkuin o onegaishimasu.', tw: '我要辦理入住。', category: '住宿飯店' },
+                    { jp: 'チェックアウトをお願いします。', ruby: 'Chekkuauto o onegaishimasu.', tw: '我要辦理退房。', category: '住宿飯店' },
+                    { jp: '荷物を預かってもらえますか？', ruby: 'Nimotsu o azukatte moraemasu ka?', tw: '可以寄放行李嗎？', category: '住宿飯店' },
+                    { jp: 'Wi-Fiのパスワードは何ですか？', ruby: 'Wi-Fi no pasuwādo wa nan desu ka?', tw: '請問 Wi-Fi 密碼是什麼？', category: '住宿飯店' },
+                    { jp: '朝食は何時からですか？', ruby: 'Chōshoku wa nanji kara desu ka?', tw: '請問早餐幾點開始？', category: '住宿飯店' },
+
+                    // --- 便利超商 ---
+                    { jp: '袋はいりません。', ruby: 'Fukuro wa irimasen.', tw: '不用袋子。', category: '便利超商' },
+                    { jp: '温めてください。', ruby: 'Atatamete kudasai.', tw: '請幫我加熱。', category: '便利超商' },
+                    { jp: 'お箸／スプーン／フォークをください。', ruby: 'Ohashi / Supūn / Fōku o kudasai.', tw: '請給我 筷子/湯匙/叉子。', category: '便利超商' },
+                    { jp: '肉まんを一つください。', ruby: 'Nikuman o hitotsu kudasai.', tw: '請給我一個肉包。', category: '便利超商' },
+                    { jp: 'ファミチキをください。', ruby: 'Famichiki o kudasai.', tw: '請給我一塊炸雞 (FamilyMart)。', category: '便利超商' },
+
+                    // --- 餐廳點餐 ---
+                    { jp: '英語のメニューはありますか？', ruby: 'Eigo no menyū wa arimasu ka?', tw: '有英文菜單嗎？', category: '餐廳點餐' },
+                    { jp: 'お水をお願いします。', ruby: 'Omizu o onegaishimasu.', tw: '請給我水。', category: '餐廳點餐' },
+                    { jp: 'おすすめは何ですか？', ruby: 'Osusume wa nan desu ka?', tw: '請問推薦什麼？', category: '餐廳點餐' },
+                    { jp: 'これをください。', ruby: 'Kore o kudasai.', tw: '我要這個。', category: '餐廳點餐' },
+                    { jp: '別々にできますか？', ruby: 'Betsubetsu ni dekimasu ka?', tw: '可以分開結帳嗎？', category: '餐廳點餐' },
+
+                    // --- 購物退稅 ---
+                    { jp: '免税できますか？', ruby: 'Menzei dekimasu ka?', tw: '可以退稅嗎？', category: '購物退稅' },
+                    { jp: '新しいのを出してもらえますか？', ruby: 'Atarashī no o dashite moraemasu ka?', tw: '可以給我新的嗎？', category: '購物退稅' },
+                    { jp: '試着してもいいですか？', ruby: 'Shichaku shite mo ii desu ka?', tw: '可以試穿嗎？', category: '購物退稅' },
+                    { jp: 'プレゼント用に包んでください。', ruby: 'Purezento yō ni tsutsunde kudasai.', tw: '請幫我包裝成禮物。', category: '購物退稅' },
+                    { jp: 'これはいくらですか？', ruby: 'Kore wa ikura desu ka?', tw: '請問這個多少錢？', category: '購物退稅' },
+
+                    // --- 滑雪體驗 (擴充：增加裝備合身度用語) ---
+                    { jp: 'レンタルはどこですか？', ruby: 'Rentaru wa doko desu ka?', tw: '請問租借處在哪裡？', category: '滑雪體驗' },
+                    { jp: '靴がキツイです。', ruby: 'Kutsu ga kitsui desu.', tw: '鞋子太緊了。', category: '滑雪體驗' },
+                    { jp: '靴が緩（ゆる）いです。', ruby: 'Kutsu ga yurui desu.', tw: '鞋子太鬆了。', category: '滑雪體驗' },
+                    { jp: '初心者コースはどれですか？', ruby: 'Shoshinsha kōsu wa dore desu ka?', tw: '請問哪個是初學者滑道？', category: '滑雪體驗' },
+                    { jp: 'リフト券を買いたいです。', ruby: 'Rifutoken o kaitai desu.', tw: '我想買纜車票。', category: '滑雪體驗' },
+                    { jp: '止まり方を教えてください。', ruby: 'Tomarikata o oshiete kudasai.', tw: '請教我怎麼停下來。', category: '滑雪體驗' },
+
+                    // --- 緊急求助 ---
+                    { jp: '助けてください！', ruby: 'Tasukete kudasai!', tw: '請救救我！', category: '緊急求助' },
+                    { jp: 'パスポートをなくしました。', ruby: 'Pasupōto o nakushimashita.', tw: '我把護照弄丟了。', category: '緊急求助' },
+                    { jp: '警察を呼んでください。', ruby: 'Keisatsu o yonde kudasai.', tw: '請幫我叫警察。', category: '緊急求助' },
+                    { jp: '台湾の大使館（代表処）はどこですか？', ruby: 'Taiwan no taishikan (daihyōsho) wa doko desu ka?', tw: '台灣辦事處在哪裡？', category: '緊急求助' }
+                ]
+            }
+        };
+        
+        // --- 0.5 Settings Logic ---
+        function renderHeaderTitle() {
+            const title = appData.config.bannerText || "TOKYO 2026";
+            document.getElementById('app-title').innerText = title;
+        }
+
+        function openSettingsModal() {
+            // Pre-fill values
+            document.getElementById('setting-banner-text').value = appData.config.bannerText || "TOKYO 2026";
+            
+            // Render Themes
+            const container = document.getElementById('setting-theme-options');
+            const current = appData.config.theme || 'sakura';
+            container.innerHTML = Object.keys(THEMES).map(key => {
+                const t = THEMES[key];
+                return `
+                    <div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="applyTheme('${key}')">
+                        <div class="theme-circle ${current === key ? 'active' : ''} group-hover:scale-110" style="background-color: ${t.main};"></div>
+                        <span class="text-xs font-bold text-gray-500 group-hover:text-tokyo-blue transition-colors">${t.name}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Hide backup area initially
+            document.getElementById('backup-content-area').classList.add('hidden');
+            
+            document.getElementById('settings-modal').classList.add('active');
+        }
+
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.remove('active'); }
+        
+        function updateBannerText(val) {
+            document.getElementById('app-title').innerText = val || "TOKYO 2026";
+        }
+        
+        function saveSettingsAndClose() {
+            const val = document.getElementById('setting-banner-text').value;
+            appData.config.bannerText = val || "TOKYO 2026";
+            saveAll();
+            closeSettingsModal();
+            showToast("✅ 設定已儲存");
+        }
+        
+        function toggleBackupView(mode) {
+            const area = document.getElementById('backup-content-area');
+            const instr = document.getElementById('backup-instruction');
+            const txt = document.getElementById('backup-textarea');
+            const btn = document.getElementById('backup-action-btn');
+            
+            area.classList.remove('hidden');
+            
+            if (mode === 'export') {
+                const dataStr = JSON.stringify({ 
+                    list: appData.shoppingList, 
+                    packing: appData.packingList, 
+                    expenses: appData.expenses, 
+                    config: appData.config,
+                    itineraries: appData.itineraries,
+                    webLinks: appData.webLinks
+                });
+                instr.innerText = "請複製下方代碼保存：";
+                txt.value = dataStr;
+                txt.readOnly = true;
+                btn.innerText = "複製代碼";
+                btn.onclick = function() {
+                    txt.select(); document.execCommand('copy'); showToast("代碼已複製！");
+                };
+                btn.className = "nook-btn w-full py-2 text-sm text-white shadow-md bg-tokyo-blue border-tokyo-gray";
+            } else {
+                instr.innerText = "請貼上備份代碼並還原：";
+                txt.value = "";
+                txt.readOnly = false;
+                txt.placeholder = "在此貼上代碼...";
+                btn.innerText = "確認還原";
+                btn.onclick = importDataFromSettings;
+                btn.className = "nook-btn w-full py-2 text-sm text-white shadow-md bg-red-500 border-red-600";
+            }
+        }
+
+        function importDataFromSettings() {
+            const code = document.getElementById('backup-textarea').value.trim();
+            if (!code) return alert("請輸入備份代碼");
+            try {
+                const data = JSON.parse(code);
+                if (confirm("⚠️ 警告：這將覆蓋現有所有資料！確定要還原嗎？")) {
+                    appData.shoppingList = data.list || appData.shoppingList;
+                    appData.packingList = data.packing || appData.packingList;
+                    appData.expenses = data.expenses || appData.expenses;
+                    appData.config = { ...appData.config, ...(data.config || {}) };
+                    if (data.itineraries) appData.itineraries = data.itineraries;
+                    if (data.webLinks) appData.webLinks = data.webLinks;
+                    
+                    if (appData.config.theme) applyTheme(appData.config.theme);
+                    if (appData.config.bannerText) renderHeaderTitle();
+
+                    saveAll(false); 
+                    closeSettingsModal();
+                    if(currentState.activeTab === 'toolbox') renderToolbox(); else renderContent();
+                    showToast("資料還原成功！");
+                }
+            } catch (e) { alert("無效的備份代碼格式"); }
+        }
+
+        // --- 3. 核心功能 ---
+        const debouncedSave = debounce(() => {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+                    list: appData.shoppingList, 
+                    packing: appData.packingList, 
+                    expenses: appData.expenses, 
+                    config: appData.config,
+                    itineraries: appData.itineraries,
+                    webLinks: appData.webLinks
+                })); 
+                updateFlightButtonStatus(); 
+            } catch (e) { console.error("Auto-save failed", e); }
+        }, 1000); 
+
+        function saveAll(showNotify = true) { 
+            if (showNotify) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+                        list: appData.shoppingList, 
+                        packing: appData.packingList, 
+                        expenses: appData.expenses, 
+                        config: appData.config,
+                        itineraries: appData.itineraries,
+                        webLinks: appData.webLinks
+                    })); 
+                    showToast("已自動儲存");
+                    updateFlightButtonStatus(); 
+                } catch (e) { console.error(e); showToast("❌ 存檔失敗"); }
+            } else {
+                debouncedSave();
+            }
+        }
+
+        function loadAll() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data) {
+                        appData.shoppingList = data.list || appData.shoppingList;
+                        appData.packingList = data.packing || appData.packingList;
+                        appData.expenses = data.expenses || appData.expenses;
+                        appData.webLinks = data.webLinks || appData.webLinks;
+                        appData.config = { ...appData.config, ...(data.config || {}) };
+                        if (data.itineraries) appData.itineraries = data.itineraries;
+                        
+                        // Apply saved theme
+                        if (appData.config.theme) {
+                            applyTheme(appData.config.theme);
+                        }
+                    }
+                }
+            } catch(e) { 
+                console.error("Load Error", e); 
+                showToast("⚠️ 讀取舊資料失敗，已重置");
+            }
+        }
+
+        function switchTab(id) { 
+            currentState.activeTab = id; 
+            if (id === 'toolbox') {
+                currentState.activeToolId = null; 
+            }
+            renderNav(); 
+            renderContent(); 
+            window.scrollTo({top:0, behavior:'smooth'}); 
+        }
+
+        function openTool(toolId) {
+            currentState.activeToolId = toolId;
+            if (toolId === 'phrases') {
+                currentState.activePhraseCategory = null;
+            }
+            renderContent();
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function closeTool() {
+            currentState.activeToolId = null;
+            renderContent();
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+        
+        // Removed old standalone functions that are now integrated or unused directly from HTML
+        // openBackupModal, closeBackupModal, openThemeModal, closeThemeModal etc are replaced/refactored into Settings logic
+        // But kept openNotebook as it is called from Settings
+
+        function openNotebook() {
+            let content = "# 手帳提示詞：東京移居指南\n\n";
+            content += "## 🎨 封面設計提示詞 (Cover Image Prompt)\n";
+            content += "`Minimalist travel journal cover for Tokyo, titled 'TOKYO ISLAND'. Design style: Animal Crossing New Horizons aesthetic, cute and rounded. Visual elements: A Nook Inc. leaf logo, a plane ticket, and a suitcase. Colors: Mint green (#4CB59C), cream (#FDFBE8), and bell yellow (#F2C94C). Texture: Soft paper texture.`\n\n---\n\n";
+            content += "## 📝 內容生成提示詞 (Content Prompts)\n";
+            for (let i = 1; i <= 6; i++) { 
+                const dayId = 'day' + i;
+                const day = appData.itineraries[dayId];
+                if (day) {
+                    content += `### 第${i}天：${day.title} (${day.subtitle})\n`;
+                    content += `> 前言：${day.intro}\n\n`;
+                    day.timeline.forEach(item => {
+                        content += `**${item.time} ${item.title}** [${item.tag}]\n`;
+                        content += `* **景點描述**：${item.desc}\n`;
+                        content += `* **攝影指南**：${item.photoTip}\n`;
+                        if(item.tips) content += `* **實用貼士**：${item.tips}\n`;
+                        content += `\n`;
+                    });
+                    content += `---\n\n`;
+                }
+            }
+            document.getElementById('notebook-content').value = content;
+            document.getElementById('notebook-modal').classList.add('active');
+        }
+        function closeNotebook() { document.getElementById('notebook-modal').classList.remove('active'); }
+        function copyNotebookContent() {
+            const el = document.getElementById('notebook-content'); el.select(); document.execCommand('copy'); showToast("已複製 DIY 方程式！");
+        }
+
+        function renderNav() {
+            document.getElementById('nav-container').innerHTML = appData.tabs.map(t => `
+                <button onclick="switchTab('${t.id}')" class="flex-shrink-0 lg:w-full text-left px-4 md:px-5 py-3 lg:py-4 font-mono text-sm rounded-xl transition-all ${currentState.activeTab === t.id ? 'bg-tokyo-blue text-white shadow-md scale-100 font-black' : 'bg-transparent text-tokyo-ink hover:bg-white/50'}">
+                    <span class="tracking-tight whitespace-nowrap flex items-center gap-2">
+                        ${t.id === 'toolbox' ? '<i data-lucide="briefcase" class="w-4 h-4"></i>' : '<i data-lucide="map" class="w-4 h-4 opacity-50"></i>'}
+                        ${t.label}
+                    </span>
+                </button>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderContent() {
+            const t = appData.tabs.find(x => x.id === currentState.activeTab);
+            const headerEl = document.getElementById('section-header');
+            
+            if (t.type === 'itinerary') {
+                headerEl.style.display = 'block';
+                headerEl.innerHTML = `
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="bg-tokyo-gold text-tokyo-ink px-3 py-1 rounded-full text-xs font-bold shadow-sm uppercase tracking-wider">Island Tour</span>
+                        <p class="text-xs text-tokyo-ink/60 font-mono uppercase tracking-widest">${t.type}</p>
+                    </div>
+                    <h2 class="text-3xl md:text-5xl font-black tracking-tight text-tokyo-blue drop-shadow-sm mb-1">${appData.itineraries[t.id].title}</h2>
+                `;
+                renderItinerary(t.id);
+            } else if (t.id === 'toolbox') {
+                headerEl.style.display = 'none';
+                renderToolbox();
+            }
+            lucide.createIcons();
+        }
+
+        function renderToolbox() {
+            const container = document.getElementById('content-area');
+            if (!currentState.activeToolId) {
+                const totalSpent = Math.round(appData.expenses.reduce((a,b)=>a+b.priceJPY,0) * appData.config.currencyRate);
+                const budgetLeft = appData.config.budgetTWD - totalSpent;
+                const budgetPct = appData.config.budgetTWD > 0 ? Math.round((budgetLeft / appData.config.budgetTWD) * 100) : 0;
+                const shopTotal = appData.shoppingList.length;
+                const shopDone = appData.shoppingList.filter(x=>x.checked).length;
+                const packTotal = appData.packingList.length;
+                const packDone = appData.packingList.filter(x=>x.checked).length;
+
+                container.innerHTML = `
+                    <div class="mb-8 pl-2">
+                        <h2 class="text-3xl md:text-4xl font-black tracking-tight text-tokyo-ink mb-1 flex items-center gap-3">
+                            <span class="bg-tokyo-blue text-white p-2 rounded-xl rotate-3 inline-block shadow-sm"><i data-lucide="backpack" class="w-6 h-6"></i></span>
+                            旅人工具箱
+                        </h2>
+                        <p class="text-sm text-gray-500 font-bold ml-1">NookPhone Apps</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${appData.tools.map(t => {
+                            let statHtml = '';
+                            if (t.id === 'budget') {
+                                const isLow = budgetPct < 20;
+                                const budgetLeftJPY = Math.round(budgetLeft / appData.config.currencyRate);
+                                statHtml = `
+                                    <div class="mt-4 bg-tokyo-bg p-3 rounded-2xl border border-white">
+                                        <div class="font-mono font-black text-2xl ${isLow ? 'text-red-500' : 'text-tokyo-blue'} tracking-tight flex items-center gap-1">
+                                            <i data-lucide="coins" class="w-5 h-5"></i> 剩餘 ${budgetPct}%
+                                        </div>
+                                        <div class="text-xs text-gray-500 font-bold mt-1 font-mono">NT$${budgetLeft.toLocaleString()} / ¥${budgetLeftJPY.toLocaleString()}</div>
+                                    </div>`;
+                            } else if (t.id === 'shopping') {
+                                statHtml = `<div class="mt-4 font-mono font-black text-2xl text-tokyo-blue tracking-tight bg-tokyo-bg p-3 rounded-2xl border border-white text-center">已買 ${shopDone} / ${shopTotal}</div>`;
+                            } else if (t.id === 'packing') {
+                                statHtml = `<div class="mt-4 font-mono font-black text-2xl text-tokyo-gold tracking-tight bg-tokyo-bg p-3 rounded-2xl border border-white text-center">已打包 ${packDone} / ${packTotal}</div>`;
+                            }
+
+                            return `
+                            <div onclick="openTool('${t.id}')" class="bright-card p-6 cursor-pointer tool-card group relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="p-4 bg-tokyo-blue text-white rounded-2xl group-hover:scale-110 transition-transform shadow-md"><i data-lucide="${t.icon}" class="w-7 h-7"></i></div>
+                                </div>
+                                <h3 class="text-xl font-bold mb-1 text-tokyo-ink group-hover:text-tokyo-blue transition-colors">${t.label}</h3>
+                                <p class="text-xs text-gray-400 font-bold mb-1 tracking-wide">${t.desc}</p>
+                                ${statHtml}
+                            </div>
+                        `}).join('')}
+                    </div>`;
+            } else {
+                if(currentState.activeToolId === 'budget') renderBudget();
+                else if(currentState.activeToolId === 'shopping') renderShopping();
+                else if(currentState.activeToolId === 'packing') renderPacking();
+                else if(currentState.activeToolId === 'phrases') renderPhrases();
+                else if(currentState.activeToolId === 'weblinks') renderWebLinks();
+            }
+        }
+        
+        function getBackHeaderHTML(title, subtitle) {
+            return `
+                <div class="mb-6 flex items-center gap-4">
+                    <button onclick="closeTool()" class="nook-btn bg-white border border-tokyo-gray text-tokyo-ink px-4 py-2 hover:bg-tokyo-bg transition-colors shadow-sm flex items-center gap-2">
+                        <i data-lucide="arrow-left" class="w-5 h-5 text-tokyo-blue"></i>
+                        <span class="font-bold text-sm">返回</span>
+                    </button>
+                    <div>
+                        <h2 class="text-2xl font-black tracking-tight text-tokyo-ink">${title}</h2>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">${subtitle}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Budget Functions ---
+        function openBudgetModal() {
+            document.getElementById('budget-input').value = appData.config.budgetTWD;
+            const rateInput = document.getElementById('rate-input');
+            const rateHint = document.getElementById('rate-hint');
+            const radios = document.getElementsByName('rateMode');
+            
+            rateInput.value = appData.config.currencyRate;
+            
+            if (appData.config.manualRateSet) {
+                // Manual Mode
+                radios[1].checked = true;
+                rateInput.disabled = false;
+                rateHint.innerText = "手動模式：匯率數值固定，不會隨網路變動";
+            } else {
+                // Auto Mode
+                radios[0].checked = true;
+                rateInput.disabled = true;
+                rateHint.innerText = "自動模式：每次開啟時抓取最新匯率";
+            }
+            
+            document.getElementById('budget-modal').classList.add('active');
+            setTimeout(() => document.getElementById('budget-input').focus(), 100);
+        }
+        
+        function toggleRateInput() {
+            const isManual = document.querySelector('input[name="rateMode"]:checked').value === 'manual';
+            const rateInput = document.getElementById('rate-input');
+            const rateHint = document.getElementById('rate-hint');
+            
+            if (isManual) {
+                rateInput.disabled = false;
+                rateInput.focus();
+                rateHint.innerText = "手動模式：請自行輸入匯率，數值將被鎖定";
+            } else {
+                rateInput.disabled = true;
+                rateHint.innerText = "自動模式：正在切換回自動更新...";
+                // Optionally visually indicate loading or wait for save
+            }
+        }
+        
+        function closeBudgetModal() {
+            document.getElementById('budget-modal').classList.remove('active');
+        }
+
+        function saveBudgetFromModal() {
+            const budgetInput = document.getElementById('budget-input').value;
+            const rateInput = document.getElementById('rate-input').value;
+            const isManual = document.querySelector('input[name="rateMode"]:checked').value === 'manual';
+            
+            const budgetVal = parseInt(budgetInput);
+            let rateVal = parseFloat(rateInput);
+
+            if (isNaN(budgetVal) || budgetVal < 0) return alert("請輸入有效的預算金額 (數字)");
+
+            appData.config.budgetTWD = budgetVal;
+            
+            if (isManual) {
+                if (isNaN(rateVal) || rateVal <= 0) return alert("請輸入有效的匯率 (數字)");
+                appData.config.currencyRate = rateVal;
+                appData.config.manualRateSet = true;
+            } else {
+                // Switch back to Auto
+                appData.config.manualRateSet = false;
+                fetchExchangeRate(); // Trigger fetch immediately
+            }
+
+            saveAll();
+            renderBudget();
+            closeBudgetModal();
+            showToast("✅ 設定已更新");
+        }
+
+        function addBudgetExpense() {
+            const item = document.getElementById('expItem').value.trim();
+            const recipient = document.getElementById('expRecipient').value.trim() || '自己';
+            let price = parseInt(document.getElementById('expPrice').value) || 0;
+            const cat = document.getElementById('expCat').value;
+            const isTaxFree = document.getElementById('expTaxFree').checked;
+            if (!item || price <= 0) return;
+            if (isTaxFree) price = Math.round(price / 1.1);
+            appData.expenses.unshift({ id: 'e_'+Date.now(), item, recipient, category: cat, priceJPY: price, date: new Date().toLocaleDateString(), isTaxFree });
+            saveAll(); renderBudget();
+        }
+        function deleteExpense(id) { if(confirm('刪除？')){ appData.expenses=appData.expenses.filter(x=>x.id!==id); saveAll(); renderBudget(); } }
+        function renderBudget() {
+            const total = Math.round(appData.expenses.reduce((a,b)=>a+b.priceJPY,0) * appData.config.currencyRate);
+            const budget = appData.config.budgetTWD;
+            const pct = budget > 0 ? Math.min(100, Math.round((total/budget)*100)) : 0;
+            const modeLabel = appData.config.manualRateSet ? 'Manual Lock' : 'Auto Update';
+
+            document.getElementById('content-area').innerHTML = `
+            ${getBackHeaderHTML('預算與記帳', 'Expense Tracker')}
+            <div class="bright-card p-6 mb-6 relative group overflow-visible">
+                <button onclick="openBudgetModal()" class="absolute top-4 right-4 bg-tokyo-bg text-tokyo-ink p-2 rounded-full hover:bg-tokyo-blue hover:text-white transition-colors shadow-md z-50 flex items-center gap-1 cursor-pointer border border-tokyo-gray active:scale-95" title="設定預算與匯率">
+                    <span class="text-xs font-bold hidden group-hover:inline">設定預算/匯率</span>
+                    <i data-lucide="settings-2" class="w-4 h-4 pointer-events-none"></i>
+                </button>
+                <div class="flex justify-between items-end relative z-0">
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Spent (TWD)</p>
+                        <h3 class="text-4xl font-black text-tokyo-ink tracking-tight">NT$${total.toLocaleString()}</h3>
+                        <p class="text-[10px] text-gray-400 mt-1 font-mono bg-tokyo-bg inline-block px-2 py-1 rounded">Rate: ${appData.config.currencyRate} (${modeLabel})</p>
+                    </div>
+                    <div class="text-right mt-8 md:mt-0">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Remaining / Budget</p>
+                        <h3 class="text-2xl font-black ${budget-total < 0 ? 'text-red-500' : 'text-green-500'}">
+                            NT$${(budget-total).toLocaleString()} 
+                            <span class="text-sm text-gray-400 font-bold">/ ${budget.toLocaleString()}</span>
+                        </h3>
+                    </div>
+                </div>
+                <div class="w-full bg-tokyo-gray h-4 mt-6 rounded-full overflow-hidden border border-white"><div class="bg-tokyo-gold h-full rounded-full" style="width: ${pct}%"></div></div>
+            </div>
+            <div class="bg-white border-2 border-tokyo-gray rounded-3xl p-6 mb-6 shadow-sm">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="expItem" placeholder="項目" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                    <input id="expRecipient" placeholder="對象" value="自己" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="expPrice" type="number" placeholder="日幣" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                    <select id="expCat" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue"><option>餐飲</option><option>交通</option><option>購物</option><option>住宿</option><option>娛樂</option><option>其他</option></select>
+                </div>
+                <div class="flex items-center gap-2 mb-4 px-1"><input type="checkbox" id="expTaxFree"><label for="expTaxFree" class="text-sm font-bold text-gray-500">免稅 (Tax Free)</label></div>
+                <button onclick="addBudgetExpense()" class="nook-btn bg-tokyo-blue text-white border-[#3AAFA9] w-full py-3 shadow-md hover:bg-[#3AAFA9]">新增支出</button>
+            </div>
+            <div class="mt-4 space-y-3">
+                ${appData.expenses.map(e => `
+                    <div class="flex justify-between items-center p-4 bg-white rounded-2xl border border-tokyo-gray hover:shadow-md transition-all">
+                        <div>
+                            <div class="font-bold text-base text-tokyo-ink">${e.item}</div>
+                            <div class="text-xs text-gray-400 font-bold mt-1 bg-tokyo-bg inline-block px-2 py-1 rounded-lg">${e.date} | ${e.category} | ${e.recipient}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-mono font-black text-lg text-tokyo-blue">¥${e.priceJPY.toLocaleString()}</span>
+                            <button onclick="deleteExpense('${e.id}')" class="text-gray-300 hover:text-red-400"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>`).join('')}
+            </div>`;
+            lucide.createIcons();
+        }
+
+        // --- Other Render Functions (Shopping, Packing, WebLinks) ---
+        function addShopItem() {
+            const name = document.getElementById('shopName').value.trim();
+            const cat = document.getElementById('shopCat').value.trim() || '其他';
+            const recipient = document.getElementById('shopRecipient').value.trim() || '自己';
+            const location = document.getElementById('shopLoc').value.trim();
+            const note = document.getElementById('shopNote').value.trim();
+            if (!name) return;
+            appData.shoppingList.unshift({ id: 's_'+Date.now(), category: cat, recipient, item: name, location, note, checked: false });
+            saveAll(); renderShopping();
+        }
+        function toggleShopCheck(id) { const x = appData.shoppingList.find(a=>a.id===id); if(x) { x.checked = !x.checked; saveAll(false); renderContent(); } }
+        function deleteShopItem(id) { if(confirm('刪除？')){ appData.shoppingList = appData.shoppingList.filter(x=>x.id!==id); saveAll(); renderShopping(); } }
+        function renderShopping() {
+            const spots = getAllSpots().map(s => `<option value="${s}">`).join('');
+            let dl = document.getElementById('spotOpts');
+            if(!dl) { dl = document.createElement('datalist'); dl.id='spotOpts'; document.body.appendChild(dl); }
+            dl.innerHTML = spots;
+
+            document.getElementById('content-area').innerHTML = `
+            ${getBackHeaderHTML('購物清單', 'Shopping List')}
+            <div class="bg-white border-2 border-tokyo-gray rounded-3xl p-6 mb-6 shadow-sm">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="shopName" placeholder="商品名稱 (必填)" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                    <input id="shopLoc" list="spotOpts" placeholder="地點 (選填)" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                     <input id="shopCat" list="catOpts" placeholder="類別" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                     <input id="shopRecipient" list="recipientOpts" placeholder="送給誰" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                </div>
+                <input id="shopNote" placeholder="備註 (例如: 買大包的)" class="bg-tokyo-bg border-none rounded-xl p-3 w-full mb-4 text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                <button onclick="addShopItem()" class="nook-btn bg-tokyo-blue text-white border-[#3AAFA9] w-full py-3 shadow-md hover:bg-[#3AAFA9]">新增購物項目</button>
+            </div>
+            <div class="space-y-3">
+                ${appData.shoppingList.map(i => {
+                    const colorClass = getCategoryColor(i.category);
+                    return `
+                    <div class="flex items-center p-4 bg-white rounded-2xl border border-tokyo-gray hover:shadow-md transition-all group">
+                        <input type="checkbox" ${i.checked?'checked':''} onclick="toggleShopCheck('${i.id}')" class="mr-4 w-6 h-6 flex-shrink-0 cursor-pointer">
+                        <div class="flex-grow ${i.checked?'opacity-40':''}">
+                            <div class="font-black text-lg text-tokyo-ink ${i.checked?'line-through':''}">${i.item}</div>
+                            <div class="flex flex-wrap gap-2 mt-2 items-center">
+                                ${i.location ? `<span class="text-xs text-tokyo-blue font-bold flex items-center gap-1 bg-tokyo-bg px-2 py-1 rounded-lg"><i data-lucide="map-pin" class="w-3 h-3"></i> ${i.location}</span>` : ''}
+                                <span class="text-[10px] px-2 py-1 rounded-lg font-bold ${colorClass}">${i.category}</span>
+                                <span class="text-[10px] bg-tokyo-ink text-white px-2 py-1 rounded-lg font-bold">${i.recipient}</span>
+                                ${i.note ? `<span class="text-xs text-gray-400 italic flex items-center gap-1"><i data-lucide="pencil" class="w-3 h-3"></i> ${i.note}</span>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="deleteShopItem('${i.id}')" class="text-gray-300 hover:text-red-400 p-2 flex-shrink-0"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </div>`;
+                }).join('')}
+            </div>`;
+            lucide.createIcons();
+        }
+
+        function addPackingItem() {
+            const name = document.getElementById('packName').value.trim();
+            const cat = document.getElementById('packCat').value.trim() || '自訂';
+            if(!name) return;
+            appData.packingList.unshift({ id: 'p_'+Date.now(), category: cat, item: name, checked: false });
+            saveAll(); renderPacking();
+        }
+        function togglePackingCheck(id) { const x = appData.packingList.find(a=>a.id===id); if(x) { x.checked = !x.checked; saveAll(false); renderPacking(); } }
+        function deletePackingItem(id) { if(confirm('刪除？')){ appData.packingList = appData.packingList.filter(x=>x.id!==id); saveAll(); renderPacking(); } }
+        
+        function renderPacking() {
+            const groups = {};
+            // Default order for known categories
+            const order = ['登機前檢查', '3C用品', '衣物', '衣物鞋包', '盥洗保養', '藥品/保健', '其他小物', '自訂'];
+            
+            // Collect all categories (including custom ones) from existing data
+            const allUsedCats = new Set([...order]);
+            appData.packingList.forEach(item => {
+                const cat = item.category || '自訂';
+                allUsedCats.add(cat);
+                if (!groups[cat]) groups[cat] = [];
+                groups[cat].push(item);
+            });
+
+            // Update Datalist dynamically so custom categories appear in dropdown
+            let dl = document.getElementById('packCatOpts');
+            if(!dl) { dl = document.createElement('datalist'); dl.id='packCatOpts'; document.body.appendChild(dl); }
+            dl.innerHTML = Array.from(allUsedCats).sort().map(c => `<option value="${c}">`).join('');
+
+            // Sort categories for display
+            const categories = Object.keys(groups).sort((a, b) => {
+                const idxA = order.indexOf(a);
+                const idxB = order.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1; // Fixed comes before custom
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b); // Custom sorted alphabetically
+            });
+
+            let listHtml = '';
+            categories.forEach(cat => {
+                const colorClass = getCategoryColor(cat);
+                listHtml += `
+                    <div class="mb-6">
+                        <h3 class="font-black text-base mb-3 px-3 flex items-center gap-2 text-tokyo-ink">
+                            <span class="w-3 h-3 rounded-full ${colorClass.split(' ')[0]} inline-block"></span>
+                            ${cat}
+                        </h3>
+                        <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-tokyo-gray">
+                            ${groups[cat].map(i => `
+                                <div class="flex items-center p-4 border-b border-tokyo-bg last:border-b-0 hover:bg-tokyo-bg transition-colors">
+                                    <input type="checkbox" ${i.checked?'checked':''} onclick="togglePackingCheck('${i.id}')" class="mr-4 w-6 h-6 flex-shrink-0 cursor-pointer">
+                                    <div class="flex-grow ${i.checked?'opacity-40':''}">
+                                        <div class="font-bold text-sm text-tokyo-ink ${i.checked?'line-through':''}">${i.item}</div>
+                                    </div>
+                                    <button onclick="deletePackingItem('${i.id}')" class="text-gray-300 hover:text-red-400 p-2 flex-shrink-0"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('content-area').innerHTML = `
+            ${getBackHeaderHTML('行李清單', 'Packing Checklist')}
+            <div class="bg-white border-2 border-tokyo-gray rounded-3xl p-6 mb-6 shadow-sm">
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="col-span-1">
+                         <input id="packCat" list="packCatOpts" placeholder="類別" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                    </div>
+                    <div class="col-span-2">
+                        <input id="packName" placeholder="物品名稱 (必填)" class="bg-tokyo-bg border-none rounded-xl p-3 w-full text-sm font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue">
+                    </div>
+                </div>
+                <button onclick="addPackingItem()" class="nook-btn bg-tokyo-blue text-white border-[#3AAFA9] w-full py-3 shadow-md hover:bg-[#3AAFA9]">新增行李項目</button>
+                <p class="text-xs text-gray-400 mt-2 text-center font-bold">Tip: 在類別欄位輸入新名稱，系統會自動建立新分類</p>
+            </div>
+            <div class="space-y-2">
+                ${listHtml}
+            </div>`;
+            lucide.createIcons();
+        }
+
+        function renderPhrases() {
+            const cats = appData.phrases.categories;
+            const currentCat = currentState.activePhraseCategory || cats[0];
+            const items = appData.phrases.items.filter(i => i.category === currentCat);
+
+            document.getElementById('content-area').innerHTML = `
+                ${getBackHeaderHTML('指差會話', 'Point & Speak')}
+                
+                <div class="flex overflow-x-auto gap-2 pb-4 mb-4 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                    ${cats.map(c => `
+                        <button onclick="currentState.activePhraseCategory='${c}'; renderPhrases();" 
+                            class="whitespace-nowrap px-4 py-2 rounded-full font-bold text-sm transition-all shadow-sm ${currentState.activePhraseCategory === c || (!currentState.activePhraseCategory && c === cats[0]) ? 'bg-tokyo-blue text-white ring-2 ring-tokyo-blue ring-offset-2' : 'bg-white text-gray-500 border border-tokyo-gray hover:bg-tokyo-bg'}">
+                            ${c}
+                        </button>
+                    `).join('')}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${items.map(p => `
+                        <div class="bg-white p-5 rounded-3xl border-2 border-tokyo-gray shadow-sm hover:shadow-md transition-all relative group overflow-hidden">
+                            <button onclick="playAudio('${p.jp}')" class="absolute top-4 right-4 bg-tokyo-gold text-tokyo-ink p-3 rounded-full shadow-md hover:scale-110 active:scale-95 transition-all z-10">
+                                <i data-lucide="volume-2" class="w-5 h-5"></i>
+                            </button>
+                            <div class="pr-12">
+                                <p class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Japanese</p>
+                                <p class="text-xl font-black text-tokyo-ink mb-1 leading-snug">${p.jp}</p>
+                                <p class="text-sm font-bold text-tokyo-blue font-mono mb-3">${p.ruby}</p>
+                                <div class="h-px w-full bg-tokyo-bg mb-3"></div>
+                                <p class="text-base font-bold text-gray-600 flex items-start gap-2">
+                                    <i data-lucide="message-square" class="w-4 h-4 mt-1 shrink-0 text-gray-300"></i>
+                                    ${p.tw}
+                                </p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="mt-8 p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+                    <div class="bg-white p-2 rounded-full text-blue-500 shadow-sm"><i data-lucide="info" class="w-5 h-5"></i></div>
+                    <div>
+                        <h4 class="font-bold text-blue-800 mb-1">使用小撇步</h4>
+                        <p class="text-sm text-blue-600 font-medium">點擊黃色喇叭按鈕可播放發音。若無法播放，請確認手機靜音模式已關閉。</p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // ... existing weblinks, flight widget, speech code ...
+        // (Function bodies remain mostly same as previous version, just ensuring context)
+        function addWebLink() {
+            const title = prompt("請輸入網站名稱:"); if(!title) return;
+            const url = prompt("請輸入網址 (URL):", "https://"); if(url) { appData.webLinks = appData.webLinks || []; appData.webLinks.push({ id: 'w_'+Date.now(), title, url }); saveAll(); renderWebLinks(); }
+        }
+        function deleteWebLink(id) { if(confirm("刪除此連結?")) { appData.webLinks = appData.webLinks.filter(w => w.id !== id); saveAll(); renderWebLinks(); } }
+        function renderWebLinks() {
+            const list = appData.webLinks || [];
+            document.getElementById('content-area').innerHTML = `
+                ${getBackHeaderHTML('網路百寶箱', 'Web Links')}
+                <button onclick="addWebLink()" class="nook-btn bg-tokyo-blue text-white border-[#3AAFA9] w-full py-3 shadow-md hover:bg-[#3AAFA9] mb-6">+ 新增連結</button>
+                <div class="space-y-4">
+                    ${list.map(w => `
+                        <div class="bg-white rounded-2xl border-l-[6px] border-tokyo-blue p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-all hover:scale-[1.01]">
+                            <a href="${w.url}" target="_blank" class="font-black text-lg text-tokyo-ink flex items-center gap-3 hover:text-tokyo-blue group">
+                                <span class="bg-tokyo-bg p-2 rounded-full group-hover:bg-tokyo-blue group-hover:text-white transition-colors"><i data-lucide="external-link" class="w-5 h-5"></i></span> 
+                                ${w.title}
+                            </a>
+                            <button onclick="deleteWebLink('${w.id}')" class="text-gray-300 hover:text-red-400 p-2"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </div>
+                    `).join('')}
+                    ${list.length===0 ? '<p class="text-center text-gray-400 py-8 font-bold italic">尚無連結</p>' : ''}
+                </div>`;
+            lucide.createIcons();
+        }
+
+        function renderItinerary(dayId) { /*... same as before ...*/
+            const day = appData.itineraries[dayId];
+            document.getElementById('content-area').innerHTML = `<div class="mb-8 p-6 bg-white border-2 border-white rounded-3xl shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-2 bg-tokyo-blue"></div><p class="text-lg opacity-80 mb-6 font-medium leading-relaxed text-justify text-tokyo-ink">${day.intro}</p><a href="${getDailyRouteUrl(day.timeline)}" target="_blank" class="nook-btn block w-full text-center bg-tokyo-ink text-white py-3 border-[#4A3B2A] hover:bg-[#4A3B2A] transition-all tracking-widest shadow-md text-sm gap-2 flex items-center justify-center"><i data-lucide="map" class="w-4 h-4"></i> Google Map Route</a></div><div class="space-y-0 md:border-l-4 md:border-dashed md:border-tokyo-gray md:ml-8 md:pl-10 relative">${day.timeline.map((i, index) => { let matched = appData.shoppingList ? appData.shoppingList.filter(s => s.location === i.title || (i.shoppingCategories && i.shoppingCategories.some(cat => s.category === cat))) : []; const linkBtnHtml = i.customLink ? `<button onclick="handleSpotLink('${dayId}', ${index}, event)" class="py-2 px-4 bg-tokyo-blue text-white text-xs font-bold hover:bg-[#3AAFA9] transition-all flex items-center justify-center gap-1 rounded-full shadow-sm border-b-4 border-[#3AAFA9] active:border-b-0 active:translate-y-1 active:mt-1"><i data-lucide="link" class="w-3 h-3"></i> ${i.customLink.label}</button>` : `<button onclick="handleSpotLink('${dayId}', ${index}, event)" class="py-2 px-4 bg-white border-2 border-dashed border-gray-300 text-gray-400 text-xs font-bold hover:border-tokyo-blue hover:text-tokyo-blue transition-all flex items-center justify-center gap-1 rounded-full"><i data-lucide="plus" class="w-3 h-3"></i> 連結</button>`; let highlightsHtml = ''; if (i.highlights && i.highlights.length > 0) { const isFood = i.tag === '美食'; const bgColor = isFood ? 'bg-orange-50' : 'bg-blue-50'; const titleColor = isFood ? 'text-orange-600' : 'text-blue-600'; const title = isFood ? '🔥 必吃人氣三選' : '✨ 必做五件事'; highlightsHtml = `<div class="mt-4 ${bgColor} p-4 rounded-2xl border-2 border-white shadow-sm"><p class="text-xs font-black ${titleColor} uppercase mb-2 tracking-wider flex items-center gap-1">${isFood ? '<i data-lucide="utensils" class="w-3 h-3"></i>' : '<i data-lucide="star" class="w-3 h-3"></i>'} ${title}</p><ul class="text-sm text-tokyo-ink font-bold space-y-2 pl-1">${i.highlights.map(h => `<li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full ${isFood?'bg-orange-400':'bg-blue-400'} mt-1.5 flex-shrink-0"></span>${h}</li>`).join('')}</ul></div>`; } let accessHtml = ''; if (i.access) { accessHtml = `<div class="mt-4 p-4 bg-tokyo-gray/30 rounded-2xl text-xs font-bold text-tokyo-ink flex items-start gap-3 border border-tokyo-gray"><div class="bg-white p-1.5 rounded-full shadow-sm text-tokyo-ink"><i data-lucide="footprints" class="w-4 h-4"></i></div><div class="pt-1">${i.access}</div></div>`; } return `<div class="mb-16 relative group"><div class="hidden md:block timeline-dot group-hover:scale-125 transition-transform"></div><div class="bg-white border-4 border-white rounded-[32px] p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden"><div class="absolute top-0 left-0 bg-tokyo-gold px-6 py-2 rounded-br-2xl text-tokyo-ink font-black font-mono text-lg shadow-sm z-10">${i.time}</div><div class="pt-10"><div class="flex flex-wrap justify-between items-start gap-2 mb-3"><span class="text-xs font-black text-white bg-tokyo-blue px-3 py-1 rounded-full shadow-sm">${i.tag}</span><div class="flex gap-2">${i.ratings?.google ? `<span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 font-bold rounded-lg border border-blue-100 flex items-center gap-1"><i data-lucide="star" class="w-3 h-3 fill-blue-600"></i> ${i.ratings.google}</span>` : ''}${i.ratings?.tabelog ? `<span class="bg-orange-50 text-orange-600 text-xs px-2 py-1 font-bold rounded-lg border border-orange-100 flex items-center gap-1"><i data-lucide="utensils-crossed" class="w-3 h-3"></i> Tabelog ${i.ratings.tabelog}</span>` : ''}</div></div><h3 class="text-2xl font-black mb-3 tracking-tight text-tokyo-ink">${i.title}</h3><p class="text-sm mb-5 leading-relaxed text-tokyo-ink/80 font-medium">${i.desc}</p><div class="mb-4 p-4 bg-tokyo-bg rounded-2xl border border-white shadow-inner"><div class="text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-1 text-tokyo-blue"><i data-lucide="camera" class="w-4 h-4"></i> Photo Guide</div><p class="text-sm leading-5 text-tokyo-ink font-bold opacity-80">${i.photoTip}</p></div><div class="text-xs bg-white p-3 border-l-4 border-tokyo-gold rounded-r-lg italic text-gray-500 font-bold mb-4">💡 ${i.tips}</div>${accessHtml}${highlightsHtml}${matched.length > 0 ? `<div class="mb-4 mt-6 p-4 border-2 border-purple-100 bg-purple-50 rounded-2xl relative"><div class="absolute -top-3 left-4 bg-purple-100 text-purple-600 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-2 shadow-sm"><i data-lucide="shopping-bag" class="w-3 h-3"></i> 購物清單</div><div class="space-y-3 mt-2">${matched.map(item => `<div class="flex items-center group cursor-pointer" onclick="toggleShopCheck('${item.id}')"><div class="w-5 h-5 border-2 rounded-lg mr-3 flex items-center justify-center bg-white ${item.checked ? 'text-green-500 border-green-500' : 'border-gray-300'} transition-colors">${item.checked ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}</div><div class="flex-grow"><div class="text-sm ${item.checked ? 'line-through opacity-40' : 'font-bold text-tokyo-ink'}">${item.item}</div><span class="text-[10px] bg-tokyo-ink text-white px-2 py-0.5 rounded-full inline-block mt-1 opacity-60">${item.recipient}</span></div></div>`).join('')}</div></div>` : ''}<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-8 pt-4 border-t-2 border-dashed border-tokyo-gray"><a href="${getMapUrl(i.title)}" target="_blank" class="py-2 px-4 bg-white border border-tokyo-gray text-xs font-bold text-tokyo-ink hover:bg-tokyo-gray transition-all flex items-center justify-center gap-2 rounded-full"><i data-lucide="map-pin" class="w-3 h-3"></i> 導航</a><a href="${getSearchUrl(i.title)}" target="_blank" class="py-2 px-4 bg-white border border-tokyo-gray text-xs font-bold text-tokyo-ink hover:bg-tokyo-gray transition-all flex items-center justify-center gap-2 rounded-full"><i data-lucide="search" class="w-3 h-3"></i> 搜尋</a>${i.ticketLink ? `<a href="${i.ticketLink}" target="_blank" class="py-2 px-4 bg-tokyo-gold text-tokyo-ink text-xs font-bold hover:bg-[#F9D667] transition-all flex items-center justify-center gap-2 rounded-full shadow-sm border-b-4 border-[#DFB640] active:border-b-0 active:translate-y-1 active:mt-1"><i data-lucide="ticket" class="w-3 h-3"></i> 購票</a>` : ''}${linkBtnHtml}</div></div></div></div>`; }).join('')}</div>`;
+            lucide.createIcons();
+        }
+
+        // Flight Widget, Link Logic, Speech... (Same logic structure, condensed for length)
+        function renderFlightWidget() { /*...*/ const container = document.getElementById('flight-modal-body'); const c = appData.config; if (c.isFlightEditMode) { container.innerHTML = `<div class="space-y-6"><div class="space-y-2 bg-white p-4 rounded-2xl shadow-sm border border-tokyo-bg"><label class="text-sm font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2"><i data-lucide="plane" class="w-4 h-4"></i> Outbound (去程)</label><input type="datetime-local" id="fOutDate" value="${c.outboundDate}" class="w-full bg-tokyo-bg rounded-xl p-3 text-base font-mono font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue border-none mb-2"><input type="text" id="fOutNo" value="${c.outboundNo}" placeholder="航班號 (ex: NH852)" class="w-full bg-tokyo-bg rounded-xl p-3 text-base font-mono uppercase font-black text-tokyo-blue outline-none focus:ring-2 focus:ring-tokyo-blue border-none mb-2"><textarea id="fOutNote" placeholder="筆記 (例如: 座位號碼、航廈資訊)" class="w-full bg-tokyo-bg rounded-xl p-3 text-sm font-bold text-gray-600 outline-none focus:ring-2 focus:ring-tokyo-blue border-none h-24 resize-none">${c.outboundNote || ''}</textarea></div><div class="space-y-2 bg-white p-4 rounded-2xl shadow-sm border border-tokyo-bg"><label class="text-sm font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2"><i data-lucide="plane" class="w-4 h-4"></i> Return (回程)</label><input type="datetime-local" id="fRetDate" value="${c.returnDate}" class="w-full bg-tokyo-bg rounded-xl p-3 text-base font-mono font-bold text-tokyo-ink outline-none focus:ring-2 focus:ring-tokyo-blue border-none mb-2"><input type="text" id="fRetNo" value="${c.returnNo}" placeholder="航班號 (ex: NH853)" class="w-full bg-tokyo-bg rounded-xl p-3 text-base font-mono uppercase font-black text-tokyo-blue outline-none focus:ring-2 focus:ring-tokyo-blue border-none mb-2"><textarea id="fRetNote" placeholder="筆記 (例如: 座位號碼、接送資訊)" class="w-full bg-tokyo-bg rounded-xl p-3 text-sm font-bold text-gray-600 outline-none focus:ring-2 focus:ring-tokyo-blue border-none h-24 resize-none">${c.returnNote || ''}</textarea></div><div class="flex gap-3 pt-2"><button onclick="saveFlightSettings()" class="nook-btn bg-tokyo-blue text-white border-[#3AAFA9] flex-1 py-3 shadow-md flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> 儲存設定</button><button onclick="appData.config.isFlightEditMode=false;renderFlightWidget();" class="nook-btn bg-white text-gray-500 border-gray-300 flex-1 py-3 shadow-sm">取消</button></div></div>`; } else { /*...*/ const now = new Date(); const outDate = c.outboundDate ? new Date(c.outboundDate) : null; const retDate = c.returnDate ? new Date(c.returnDate) : null; let status = "NO INFO"; let targetDate = null; let cdText = "--"; if (outDate && now < outDate) { status = "COUNTDOWN"; targetDate = outDate; } else if (outDate && retDate && now >= outDate && now < retDate) { status = "IN TRIP"; targetDate = retDate; } else if (retDate && now >= retDate) { status = "ENDED"; } if (targetDate) { const diff = targetDate - now; const d = Math.floor(diff / 86400000); const h = Math.floor((diff % 86400000) / 3600000); cdText = `${d}d ${h}h`; } else if (status === "ENDED") { cdText = "HOME"; } container.innerHTML = `<div class="text-center mb-8 relative bg-white p-6 rounded-3xl shadow-sm border-2 border-tokyo-gray"><button onclick="appData.config.isFlightEditMode=true;renderFlightWidget();" class="absolute top-4 right-4 text-gray-300 hover:text-tokyo-blue transition-colors bg-tokyo-bg p-2 rounded-full"><i data-lucide="edit-2" class="w-4 h-4"></i></button><p class="text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">${status === 'COUNTDOWN' ? '離登機還有' : (status === 'IN TRIP' ? '離回家還有' : (status === 'ENDED' ? '旅程結束' : '尚無資料'))}</p><div class="text-6xl font-black text-tokyo-blue tracking-tighter drop-shadow-sm font-mono">${cdText}</div></div><div class="space-y-4"><div class="bg-white rounded-2xl border-2 border-tokyo-bg p-5 ${outDate && now > outDate ? 'opacity-60 grayscale' : ''}"><div class="flex items-start gap-4 mb-3"><div class="bg-tokyo-blue text-white p-3 rounded-full shadow-md shrink-0"><i data-lucide="plane" class="w-6 h-6"></i></div><div><p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Outbound</p><p class="text-xl font-mono font-black text-tokyo-ink">${c.outboundDate ? new Date(c.outboundDate).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '--/-- --:--'}</p><p class="text-sm font-bold text-tokyo-gold mt-1 bg-tokyo-ink inline-block px-2 py-0.5 rounded-md">${c.outboundNo || '航班未定'}</p></div></div>${c.outboundNote ? `<div class="mt-2 pt-3 border-t-2 border-dashed border-tokyo-gray"><p class="text-sm text-gray-600 font-bold whitespace-pre-wrap flex gap-2"><i data-lucide="sticky-note" class="w-4 h-4 text-tokyo-blue shrink-0 mt-0.5"></i><span>${c.outboundNote}</span></p></div>` : ''}</div><div class="bg-white rounded-2xl border-2 border-tokyo-bg p-5 ${retDate && now > retDate ? 'opacity-60 grayscale' : ''}"><div class="flex items-start gap-4 mb-3"><div class="bg-tokyo-gold text-tokyo-ink p-3 rounded-full shadow-md shrink-0"><i data-lucide="plane" class="w-6 h-6" style="transform: scaleX(-1);"></i></div><div><p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Return</p><p class="text-xl font-mono font-black text-tokyo-ink">${c.returnDate ? new Date(c.returnDate).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '--/-- --:--'}</p><p class="text-sm font-bold text-tokyo-gold mt-1 bg-tokyo-ink inline-block px-2 py-0.5 rounded-md">${c.returnNo || '航班未定'}</p></div></div>${c.returnNote ? `<div class="mt-2 pt-3 border-t-2 border-dashed border-tokyo-gray"><p class="text-sm text-gray-600 font-bold whitespace-pre-wrap flex gap-2"><i data-lucide="sticky-note" class="w-4 h-4 text-tokyo-gold shrink-0 mt-0.5"></i><span>${c.returnNote}</span></p></div>` : ''}</div></div>`; } lucide.createIcons(); }
+        function saveFlightSettings() { /*...*/ appData.config.outboundDate = document.getElementById('fOutDate').value; appData.config.outboundNo = document.getElementById('fOutNo').value; appData.config.outboundNote = document.getElementById('fOutNote').value; appData.config.returnDate = document.getElementById('fRetDate').value; appData.config.returnNo = document.getElementById('fRetNo').value; appData.config.returnNote = document.getElementById('fRetNote').value; appData.config.isFlightEditMode = false; saveAll(); renderFlightWidget(); }
+        function openFlightModal() { document.getElementById('flight-modal').classList.add('active'); renderFlightWidget(); }
+        function closeFlightModal() { document.getElementById('flight-modal').classList.remove('active'); }
+        function updateFlightButtonStatus() { /*...*/ const now = new Date(); const outDate = appData.config.outboundDate ? new Date(appData.config.outboundDate) : null; const retDate = appData.config.returnDate ? new Date(appData.config.returnDate) : null; let targetDate = null; if (outDate && now < outDate) targetDate = outDate; else if (retDate && now < retDate) targetDate = retDate; const lightEl = document.getElementById('flight-status-light'); if(!lightEl) return; lightEl.className = 'status-light'; if (targetDate) { const diffMs = targetDate - now; const diffHours = diffMs / (1000 * 60 * 60); if (diffHours <= 3) { lightEl.classList.add('red'); } else if (diffHours <= 24) { lightEl.classList.add('yellow'); } else if (diffHours <= 48) { lightEl.classList.add('green'); } } }
+        function handleSpotLink(dayId, index, event) { /*...*/ if(event) event.stopPropagation(); const item = appData.itineraries[dayId].timeline[index]; const currentLink = item.customLink; if (currentLink) { try { if (confirm(`即將前往: ${currentLink.label}\n\n[確定] 開啟網頁\n[取消] 編輯或刪除連結`)) { window.open(currentLink.url, '_blank'); } else { const newLabel = prompt("編輯連結標題 (留空刪除):", currentLink.label); if (newLabel === null) return; if (newLabel.trim() === "") { delete appData.itineraries[dayId].timeline[index].customLink; saveAll(); renderItinerary(dayId); showToast("🗑️ 連結已刪除"); } else { const newUrl = prompt("編輯網址:", currentLink.url); if (newUrl) { appData.itineraries[dayId].timeline[index].customLink = { label: newLabel, url: newUrl }; saveAll(); renderItinerary(dayId); showToast("✏️ 連結已更新"); } } } } catch(e) { console.log("Link action cancelled or failed"); } } else { try { const label = prompt("請輸入自訂連結標題 (例如: 必吃食記):"); if (label) { const url = prompt("請輸入網址 (URL):", "https://"); if (url) { appData.itineraries[dayId].timeline[index].customLink = { label, url }; saveAll(); renderItinerary(dayId); showToast("🔗 自訂連結已新增"); } } } catch(e) { console.log("Link creation cancelled"); } } }
+        let voices = []; let currentUtterance = null; 
+        function loadVoices() { voices = window.speechSynthesis.getVoices(); }
+        if ('speechSynthesis' in window) { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; }
+        function playAudio(text) { /*...*/ if (!('speechSynthesis' in window)) { showToast("❌ 裝置不支援語音"); return; } window.speechSynthesis.cancel(); let speakText = text.replace(/[／/]/g, '、'); speakText = speakText.replace(/[（(]/g, ' ').replace(/[）)]/g, ''); setTimeout(() => { const u = new SpeechSynthesisUtterance(speakText); u.lang = 'ja-JP'; u.rate = 0.9; u.pitch = 1.0; if (voices.length === 0) voices = window.speechSynthesis.getVoices(); const jpVoices = voices.filter(v => v.lang.includes('ja') || v.lang.includes('JP')); if (jpVoices.length > 0) { const preferred = jpVoices.find(v => v.name.includes('Google')) || jpVoices[0]; u.voice = preferred; } u.onstart = () => showToast("🔊 發音中..."); u.onerror = (e) => { if (e.error === 'canceled' || e.error === 'interrupted') return; showToast("❌ 語音播放失敗"); }; currentUtterance = u; window.speechSynthesis.speak(u); }, 10); }
+
+        function runSystemCheck() {
+            if (appData.itineraries && Object.keys(appData.itineraries).length === 6) { console.log("✅ Itinerary Data Loaded (D1-D6)"); }
+            if ('speechSynthesis' in window) console.log("✅ Smart TTS Engine Available");
+            if (appData.tools && appData.tools.length === 5) console.log("✅ Toolbox Modules Ready");
+            
+            // Check theme on initial load to ensure consistency
+            if (appData.config.theme) applyTheme(appData.config.theme);
+            if (appData.config.bannerText) renderHeaderTitle();
+            
+            showToast("祝你旅途順利！");
+        }
+
+        window.onload = function() {
+            loadAll(); fetchExchangeRate(); renderNav(); renderContent(); renderFlightWidget(); 
+            lucide.createIcons();
+            setInterval(renderFlightWidget, 60000);
+            setTimeout(() => { if(document.getElementById('app-container')) { runSystemCheck(); } }, 500);
+        };
+    </script>
+    <datalist id="recipientOpts"><option value="自己"><option value="家人"><option value="同事"><option value="朋友"><option value="客戶"></datalist>
+    <datalist id="catOpts"><option value="藥妝"><option value="伴手禮"><option value="生活雜貨"><option value="電器"><option value="服飾"><option value="角色週邊"><option value="文具"></datalist>
+    <!-- Removed static packCatOpts to allow dynamic generation -->
 </body>
 </html>
